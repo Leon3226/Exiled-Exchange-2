@@ -29,13 +29,14 @@ interface CreateOptions {
   activateStockFilter: boolean;
   exact: boolean;
   useEn: boolean;
-  autoFillEmptyRuneSockets: PriceCheckWidget["autoFillEmptyRuneSockets"];
+  autoFillEmptyAugmentSockets: PriceCheckWidget["autoFillEmptyRuneSockets"];
 }
 
 export function createFilters(
   item: ParsedItem,
   opts: CreateOptions,
 ): ItemFilters {
+  performance.mark("create-item-filters-start");
   const filters: ItemFilters = {
     searchExact: {},
     trade: {
@@ -131,16 +132,13 @@ export function createFilters(
         baseTypeTrade: t(opts, ITEM_BY_REF("ITEM", item.info.unique.base)![0]),
       };
     } else {
-      const isOccupiedBy = item.statsByType.some(
-        (calc) => calc.stat.ref === "Map is occupied by #",
-      );
       filters.searchExact = {
         baseType: item.info.name,
         baseTypeTrade: t(opts, item.info),
       };
       filters.searchRelaxed = {
         category: item.category,
-        disabled: !isOccupiedBy,
+        disabled: false,
       };
     }
 
@@ -254,25 +252,25 @@ export function createFilters(
     };
   }
 
-  if (item.runeSockets) {
-    if (item.runeSockets.current) {
-      filters.runeSockets = {
-        value: item.runeSockets.current,
-        disabled: item.runeSockets.current <= item.runeSockets.normal,
+  if (item.augmentSockets) {
+    if (item.augmentSockets.current) {
+      filters.augmentSockets = {
+        value: item.augmentSockets.current,
+        disabled: item.augmentSockets.current <= item.augmentSockets.normal,
       };
     }
-    if (item.runeSockets.empty > 0 && item.rarity !== ItemRarity.Unique) {
+    if (item.augmentSockets.empty > 0 && item.rarity !== ItemRarity.Unique) {
       const type = isArmourOrWeaponOrCaster(item.category);
       if (
-        opts.autoFillEmptyRuneSockets &&
+        opts.autoFillEmptyAugmentSockets &&
         (item.rarity === ItemRarity.Magic || item.rarity === ItemRarity.Rare) &&
         (type === "armour" || type === "weapon")
       ) {
         filters.itemEditorSelection = {
           disabled: false,
           editing: false,
-          value: opts.autoFillEmptyRuneSockets
-            ? opts.autoFillEmptyRuneSockets
+          value: opts.autoFillEmptyAugmentSockets
+            ? opts.autoFillEmptyAugmentSockets
             : "None",
         };
       } else {
@@ -292,6 +290,22 @@ export function createFilters(
     };
   }
 
+  if (item.requires && item.rarity === ItemRarity.Rare && !opts.exact) {
+    if (
+      item.requires.level &&
+      item.requires.level <= 75 &&
+      item.itemLevel &&
+      item.itemLevel <= 75
+    ) {
+      filters.requires = {
+        level: {
+          value: item.requires.level,
+          disabled: true,
+        },
+      };
+    }
+  }
+
   const forAdornedJewel =
     item.rarity === ItemRarity.Magic &&
     // item.isCorrupted && -- let the buyer corrupt
@@ -300,8 +314,8 @@ export function createFilters(
 
   if (
     !item.isUnmodifiable &&
-    // Ignore tablet since only corrupted are rares, and we want to compare to them
-    item.category !== ItemCategory.Tablet &&
+    // Ignore waystones now(prev tablets) since if  there is one that is corrupted with right mods buyer wont care
+    item.category !== ItemCategory.Map &&
     (item.rarity === ItemRarity.Normal ||
       item.rarity === ItemRarity.Magic ||
       item.rarity === ItemRarity.Rare ||
@@ -358,7 +372,7 @@ export function createFilters(
   }
 
   if (item.isFoil) {
-    filters.foil = { disabled: false };
+    filters.foil = { disabled: true };
   }
 
   if (item.influences.length && item.influences.length <= 2) {
@@ -444,7 +458,10 @@ export function createFilters(
       statRefs: item.statsByType
         .filter((calc) => calc.type === ModifierType.Veiled)
         .map((calc) => calc.stat.ref),
-      disabled: false,
+      veiledCount: item.newMods.filter(
+        (m) => m.info.type === ModifierType.Veiled,
+      ).length,
+      disabled: item.rarity !== ItemRarity.Unique,
     };
 
     if (item.rarity !== ItemRarity.Unique) {
@@ -454,15 +471,29 @@ export function createFilters(
     }
   }
 
+  if (item.category === ItemCategory.Tablet && !item.isUnidentified) {
+    const usesRemaining = item.statsByType.find(
+      (t) => t.type === ModifierType.Implicit,
+    )!.sources[0].contributes!.value;
+    filters.usesRemaining = {
+      value: usesRemaining,
+      disabled: usesRemaining < 10,
+    };
+    // Remove the used stat
+    item.statsByType = item.statsByType.filter(
+      (t) => t.type !== ModifierType.Implicit,
+    );
+  }
+
   if (
     (item.rarity === ItemRarity.Normal ||
       item.rarity === ItemRarity.Magic ||
       item.rarity === ItemRarity.Rare ||
       item.rarity === ItemRarity.Unique) &&
-    item.runeSockets &&
-    item.runeSockets.empty > 0
+    item.augmentSockets &&
+    item.augmentSockets.empty > 0
   ) {
-    filters.tempRuneStorage = [];
+    filters.tempAugmentStorage = [];
   }
 
   return filters;

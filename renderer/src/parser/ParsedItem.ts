@@ -19,10 +19,10 @@ export enum ItemInfluence {
   Warlord = "Warlord",
 }
 
-// export interface Rune {
+// export interface Augment {
 //   index: number;
 //   isEmpty: boolean;
-//   rune?: string;
+//   augment?: string;
 //   text?: string; // Text of modifier
 //   isFake?: boolean;
 //   modifier?: ParsedModifier; // @deprecated
@@ -48,11 +48,18 @@ export interface ParsedItem {
   weaponReload?: number;
   mapBlighted?: "Blighted" | "Blight-ravaged";
   mapTier?: number;
+  mapPackSize?: number;
+  mapItemRarity?: number;
+  mapRevives?: number;
+  mapDropChance?: number;
+  mapMagicMonsters?: number;
+  mapRareMonsters?: number;
+  mapGold?: number;
   gemLevel?: number;
   areaLevel?: number;
   talismanTier?: number;
   quality?: number;
-  runeSockets?: {
+  augmentSockets?: {
     empty: number;
     current: number;
     normal: number;
@@ -87,6 +94,12 @@ export interface ParsedItem {
   };
   note?: string;
   category?: ItemCategory;
+  requires?: {
+    level: number;
+    str: number;
+    dex: number;
+    int: number;
+  };
   info: BaseType;
   rawText: string;
 }
@@ -113,5 +126,10 @@ export function createVirtualItem(
 }
 
 export function itemIsModifiable(item: ParsedItem) {
-  return !item.isCorrupted && !item.isMirrored && !item.isSanctified;
+  return (
+    item.info.craftable &&
+    !item.isCorrupted &&
+    !item.isMirrored &&
+    !item.isSanctified
+  );
 }

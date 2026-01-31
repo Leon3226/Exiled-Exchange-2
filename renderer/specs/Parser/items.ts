@@ -23,11 +23,17 @@ export class TestItem implements ParsedItem {
   weaponReload?: number | undefined;
   mapBlighted?: "Blighted" | "Blight-ravaged" | undefined;
   mapTier?: number | undefined;
+  mapPackSize?: number;
+  mapItemRarity?: number;
+  mapRevives?: number;
+  mapDropChance?: number;
+  mapMagicMonsters?: number;
+  mapRareMonsters?: number;
   gemLevel?: number | undefined;
   areaLevel?: number | undefined;
   talismanTier?: number | undefined;
   quality?: number | undefined;
-  runeSockets?:
+  augmentSockets?:
     | {
         empty: number;
         current: number;
@@ -60,6 +66,14 @@ export class TestItem implements ParsedItem {
 
   note?: string;
   category?: ItemCategory | undefined;
+
+  requires?: {
+    level: number;
+    str: number;
+    dex: number;
+    int: number;
+  };
+
   info: BaseType = {
     name: "test",
     refName: "test",
@@ -119,6 +133,12 @@ NormalItem.quality = 9;
 NormalItem.armourAR = 174;
 NormalItem.armourES = 60;
 NormalItem.itemLevel = 81;
+NormalItem.requires = {
+  level: 75,
+  str: 67,
+  dex: 0,
+  int: 67,
+};
 
 NormalItem.info.refName = "Divine Crown";
 NormalItem.sectionCount = 4;
@@ -151,6 +171,12 @@ MagicItem.weaponELEMENTAL = MagicItem.weaponLIGHTNING;
 MagicItem.weaponCRIT = 5;
 MagicItem.weaponAS = 1.2;
 MagicItem.itemLevel = 32;
+MagicItem.requires = {
+  level: 28,
+  str: 57,
+  dex: 0,
+  int: 0,
+};
 
 MagicItem.info.refName = "Temple Maul";
 MagicItem.sectionCount = 5;
@@ -194,6 +220,12 @@ RareItem.weaponELEMENTAL =
 RareItem.weaponAS = 1.2;
 RareItem.weaponCRIT = 5;
 RareItem.itemLevel = 80;
+RareItem.requires = {
+  level: 51,
+  str: 0,
+  dex: 103,
+  int: 0,
+};
 
 RareItem.info.refName = "Rider Bow";
 RareItem.sectionCount = 5;
@@ -231,6 +263,12 @@ UniqueItem.category = ItemCategory.Focus;
 UniqueItem.rarity = ItemRarity.Unique;
 UniqueItem.armourES = 44;
 UniqueItem.itemLevel = 81;
+UniqueItem.requires = {
+  level: 26,
+  str: 0,
+  dex: 0,
+  int: 43,
+};
 
 // NOTE: requires step through to verify use of Name here is right
 UniqueItem.info.refName = "The Eternal Spark";
@@ -250,7 +288,7 @@ Requires: Level 45
 Item Level: 79
 --------
 { Implicit Modifier — Elemental, Fire, Cold, Lightning, Resistance }
-+8(7-10)% to all Elemental Resistances (implicit)
++8(7-10)% to all Elemental Resistances
 --------
 { Prefix Modifier "Vaporous" (Tier: 3) — Defences }
 +143(124-151) to Evasion Rating
@@ -265,6 +303,12 @@ Item Level: 79
 RareWithImplicit.category = ItemCategory.Ring;
 RareWithImplicit.rarity = ItemRarity.Rare;
 RareWithImplicit.itemLevel = 79;
+RareWithImplicit.requires = {
+  level: 45,
+  str: 0,
+  dex: 0,
+  int: 0,
+};
 
 RareWithImplicit.info.refName = "Prismatic Ring";
 RareWithImplicit.sectionCount = 5;
@@ -274,18 +318,15 @@ RareWithImplicit.suffixCount = 3;
 // #endregion
 
 // #region UncutSkillGem
-export const UncutSkillGem = new TestItem(`Rarity: Currency
-Uncut Skill Gem
---------
-Level: 19
---------
-Item Level: 19
+export const UncutSkillGem = new TestItem(`Item Class: Uncut Skill Gems
+Rarity: Currency
+Uncut Skill Gem (Level 19)
 --------
 Creates a Skill Gem or Level an existing gem to level 19
 --------
 Right Click to engrave a Skill Gem.
 `);
-UncutSkillGem.category = ItemCategory.UncutGem;
+UncutSkillGem.category = ItemCategory.Currency;
 UncutSkillGem.gemLevel = 19;
 UncutSkillGem.info = {
   name: "Uncut Skill Gem",
@@ -293,62 +334,56 @@ UncutSkillGem.info = {
   namespace: "ITEM",
   icon: "test",
   tags: [],
-  craftable: { category: ItemCategory.UncutGem },
+  craftable: { category: ItemCategory.Currency },
 };
 
-UncutSkillGem.sectionCount = 5;
+UncutSkillGem.sectionCount = 3;
 // #endregion
 
 // #region UncutSpiritGem
-export const UncutSpiritGem = new TestItem(`Rarity: Currency
-Uncut Spirit Gem
+export const UncutSpiritGem = new TestItem(`Item Class: Uncut Spirit Gems
+Rarity: Currency
+Uncut Spirit Gem (Level 16)
 --------
-Level: 19
---------
-Item Level: 19
---------
-Creates a Persistent Buff Skill Gem or Level an existing gem to Level 19
+Creates a Persistent Buff Skill Gem or Level an existing gem to Level 16
 --------
 Right Click to engrave a Persistent Buff Skill Gem.
 `);
-UncutSpiritGem.category = ItemCategory.UncutGem;
-UncutSpiritGem.gemLevel = 19;
+UncutSpiritGem.category = ItemCategory.Currency;
+UncutSpiritGem.gemLevel = 16;
 UncutSpiritGem.info = {
   name: "Uncut Spirit Gem",
   refName: "Uncut Spirit Gem",
   namespace: "ITEM",
   icon: "test",
   tags: [],
-  craftable: { category: ItemCategory.UncutGem },
+  craftable: { category: ItemCategory.Currency },
 };
 
-UncutSpiritGem.sectionCount = 5;
+UncutSpiritGem.sectionCount = 3;
 // #endregion
 
 // #region UncutSupportGem
-export const UncutSupportGem = new TestItem(`Rarity: Currency
-Uncut Support Gem
+export const UncutSupportGem = new TestItem(`Item Class: Uncut Support Gems
+Rarity: Currency
+Uncut Support Gem (Level 5)
 --------
-Level: 3
---------
-Item Level: 3
---------
-Creates a Support Gem up to level 3
+Creates a Support Gem
 --------
 Right Click to engrave a Support Gem.
 `);
-UncutSupportGem.category = ItemCategory.UncutGem;
-UncutSupportGem.gemLevel = 3;
+UncutSupportGem.category = ItemCategory.Currency;
+UncutSupportGem.gemLevel = 5;
 UncutSupportGem.info = {
   name: "Uncut Spirit Gem",
   refName: "Uncut Spirit Gem",
   namespace: "ITEM",
   icon: "test",
   tags: [],
-  craftable: { category: ItemCategory.UncutGem },
+  craftable: { category: ItemCategory.Currency },
 };
 
-UncutSupportGem.sectionCount = 5;
+UncutSupportGem.sectionCount = 3;
 // #endregion
 
 // #region HighDamageRareItem
@@ -372,7 +407,7 @@ Item Level: 82
 36% increased Physical Damage (rune)
 --------
 { Implicit Modifier }
-Grenade Skills Fire an additional Projectile (implicit)
+Grenade Skills Fire an additional Projectile
 --------
 { Prefix Modifier "Merciless" (Tier: 1) — Damage, Physical, Attack }
 173(170-179)% increased Physical Damage
@@ -392,6 +427,7 @@ Fractured Item
 `);
 HighDamageRareItem.category = ItemCategory.Crossbow;
 HighDamageRareItem.rarity = ItemRarity.Rare;
+HighDamageRareItem.quality = 29;
 HighDamageRareItem.weaponPHYSICAL = 728.5;
 HighDamageRareItem.weaponAS = 2.07;
 HighDamageRareItem.weaponCRIT = 5;
@@ -403,8 +439,14 @@ HighDamageRareItem.sectionCount = 9;
 HighDamageRareItem.prefixCount = 3;
 HighDamageRareItem.suffixCount = 3;
 HighDamageRareItem.implicitCount = 1;
+HighDamageRareItem.requires = {
+  level: 79,
+  str: 89,
+  dex: 89,
+  int: 0,
+};
 
-HighDamageRareItem.runeSockets = {
+HighDamageRareItem.augmentSockets = {
   empty: 0,
   current: 2,
   normal: 2,
@@ -446,15 +488,22 @@ Note: ~b/o 10 divine
 `);
 ArmourHighValueRareItem.category = ItemCategory.BodyArmour;
 ArmourHighValueRareItem.rarity = ItemRarity.Rare;
+ArmourHighValueRareItem.quality = 20;
 ArmourHighValueRareItem.armourAR = 3075;
 ArmourHighValueRareItem.itemLevel = 80;
+ArmourHighValueRareItem.requires = {
+  level: 65,
+  str: 121,
+  dex: 0,
+  int: 0,
+};
 
 ArmourHighValueRareItem.info.refName = "Soldier Cuirass";
 ArmourHighValueRareItem.sectionCount = 8;
 ArmourHighValueRareItem.prefixCount = 3;
 ArmourHighValueRareItem.suffixCount = 3;
 
-ArmourHighValueRareItem.runeSockets = {
+ArmourHighValueRareItem.augmentSockets = {
   empty: 0,
   current: 3,
   normal: 2,
@@ -489,6 +538,12 @@ Note: ~b/o 5 exalted
 WandRareItem.category = ItemCategory.Wand;
 WandRareItem.rarity = ItemRarity.Rare;
 WandRareItem.itemLevel = 82;
+WandRareItem.requires = {
+  level: 90,
+  str: 0,
+  dex: 0,
+  int: 125,
+};
 
 WandRareItem.info.refName = "Withered Wand";
 WandRareItem.sectionCount = 6;
@@ -519,10 +574,357 @@ Note: ~b/o 1 aug
 NormalShield.category = ItemCategory.Shield;
 NormalShield.rarity = ItemRarity.Normal;
 NormalShield.itemLevel = 82;
+NormalShield.armourAR = 71;
+NormalShield.armourEV = 64;
+NormalShield.armourBLOCK = 25;
+NormalShield.requires = {
+  level: 54,
+  str: 42,
+  dex: 42,
+  int: 0,
+};
 
 NormalShield.info.refName = "Polished Targe";
 NormalShield.sectionCount = 6;
 NormalShield.implicitCount = 1;
 
 NormalShield.note = "~b/o 1 aug";
+// #endregion
+
+// #region TwoImplicitItem
+export const TwoImplicitItem = new TestItem(`Item Class: Belts
+Rarity: Rare
+Corpse Snare
+Ornate Belt
+--------
+Requires: Level 59
+--------
+Item Level: 80
+--------
+{ Implicit Modifier }
+14(15-10)% reduced Charm Charges used
+{ Implicit Modifier — Charm }
+Has 2(1-3) Charm Slots
+--------
+{ Prefix Modifier "Transformative" (Tier: 4) }
+11(10-15)% increased Charm Effect Duration
+{ Prefix Modifier "Fecund" (Tier: 1) — Life }
++161(150-174) to maximum Life
+{ Suffix Modifier "of the Volcano" (Tier: 3) — Elemental, Fire, Resistance }
++32(31-35)% to Fire Resistance
+{ Suffix Modifier "of the Titan" (Tier: 2) — Attribute }
++33(31-33) to Strength
+{ Suffix Modifier "of Steel Skin" (Tier: 6) }
++94(73-97) to Stun Threshold
+`);
+TwoImplicitItem.category = ItemCategory.Belt;
+TwoImplicitItem.rarity = ItemRarity.Rare;
+TwoImplicitItem.itemLevel = 80;
+TwoImplicitItem.requires = {
+  level: 59,
+  str: 0,
+  dex: 0,
+  int: 0,
+};
+
+TwoImplicitItem.info.refName = "Ornate Belt";
+TwoImplicitItem.sectionCount = 5;
+TwoImplicitItem.implicitCount = 2;
+TwoImplicitItem.prefixCount = 2;
+TwoImplicitItem.suffixCount = 3;
+// #endregion
+
+// #region TwoLineOneImplicitItem
+export const TwoLineOneImplicitItem = new TestItem(`Item Class: Tablet
+Rarity: Rare
+Planar Challenge
+Delirium Precursor Tablet
+--------
+Item Level: 84
+--------
+{ Implicit Modifier }
+Adds a Mirror of Delirium to a Map
+17 uses remaining
+--------
+{ Prefix Modifier "Breeding" }
+7(4-10)% increased Pack Size in Map
+{ Prefix Modifier "Teeming" }
+Map has 16(25-70)% increased Magic Monsters
+{ Suffix Modifier "of the Simulacrum" (Tier: 1) }
+6(10-30)% increased Stack size of Simulacrum Splinters found in Map
+{ Suffix Modifier "of Phobia" (Tier: 1) }
+Delirium Encounters in Map are 5(10-30)% more likely to spawn Unique Bosses
+--------
+Can be used in a personal Map Device to add modifiers to a Map.
+--------
+Corrupted
+--------
+Note: ~b/o 1 exalted
+`);
+TwoLineOneImplicitItem.category = ItemCategory.Tablet;
+TwoLineOneImplicitItem.rarity = ItemRarity.Rare;
+TwoLineOneImplicitItem.itemLevel = 84;
+
+TwoLineOneImplicitItem.info.refName = "Delirium Precursor Tablet";
+TwoLineOneImplicitItem.sectionCount = 7;
+TwoLineOneImplicitItem.implicitCount = 1;
+TwoLineOneImplicitItem.prefixCount = 2;
+TwoLineOneImplicitItem.suffixCount = 2;
+
+TwoLineOneImplicitItem.isCorrupted = true;
+TwoLineOneImplicitItem.note = "~b/o 1 exalted";
+// #endregion
+
+// #region Map
+export const RareMap = new TestItem(`Item Class: Waystones
+Rarity: Rare
+Desolate Route
+Waystone (Tier 14)
+--------
+Waystone Tier: 14
+Revives Available: 2 (augmented)
+Monster Pack Size: +34% (augmented)
+Rare Monsters: +28% (augmented)
+Waystone Drop Chance: +75% (augmented)
+--------
+Item Level: 80
+--------
+{ Prefix Modifier "Shocking" (Tier: 1) }
+Area has patches of Shocked Ground — Unscalable Value
+{ Prefix Modifier "Painful" (Tier: 1) }
+28(26-30)% increased Monster Damage
+{ Suffix Modifier "of Splitting" (Tier: 2) }
+Monsters fire 2 additional Projectiles
+{ Suffix Modifier "of Destruction" (Tier: 1) }
+Monsters have 293(260-300)% increased Critical Hit Chance
++26(26-30)% to Monster Critical Damage Bonus
+--------
+Can be used in a Map Device, allowing you to enter a Map. Waystones can only be used once.
+`);
+RareMap.category = ItemCategory.Map;
+RareMap.rarity = ItemRarity.Normal;
+RareMap.mapTier = 14;
+RareMap.mapRevives = 2;
+RareMap.mapPackSize = 34;
+RareMap.mapRareMonsters = 28;
+RareMap.mapDropChance = 75;
+RareMap.sectionCount = 5;
+// #endregion
+
+// #region RareMapFakeAllProps
+export const RareMapFakeAllProps = new TestItem(`Item Class: Waystones
+Rarity: Rare
+Blasted Control
+Waystone (Tier 16)
+--------
+Waystone Tier: 16
+Revives Available: 0 (augmented)
+Monster Pack Size: +20% (augmented)
+Magic Monsters: +30% (augmented)
+Rare Monsters: +71% (augmented)
+Waystone Drop Chance: +90% (augmented)
+Item Rarity: +17% (augmented)
+--------
+Item Level: 79
+--------
+{ Prefix Modifier "Painful" (Tier: 1) }
+30(26-30)% increased Monster Damage
+{ Prefix Modifier "Enduring" (Tier: 1) }
+Monsters are Armoured
+{ Prefix Modifier "Slowing" (Tier: 1) }
+Players are periodically Cursed with Temporal Chains — Unscalable Value
+{ Suffix Modifier "of the Unwavering" (Tier: 1) }
+Monsters have 71(70-79)% increased Ailment Threshold
+Monsters have 72(70-79)% increased Stun Threshold
+{ Suffix Modifier "of Drought" (Tier: 1) }
+Players gain 33(35-30)% reduced Flask Charges
+{ Suffix Modifier "of Shattering" (Tier: 1) }
+Monsters Break Armour equal to 36(30-45)% of Physical Damage dealt
+--------
+Can be used in a Map Device, allowing you to enter a Map. Waystones can only be used once.
+--------
+Corrupted
+`);
+RareMapFakeAllProps.category = ItemCategory.Map;
+RareMapFakeAllProps.rarity = ItemRarity.Normal;
+RareMapFakeAllProps.mapTier = 16;
+RareMapFakeAllProps.mapRevives = 0;
+RareMapFakeAllProps.mapPackSize = 20;
+RareMapFakeAllProps.mapMagicMonsters = 30;
+RareMapFakeAllProps.mapRareMonsters = 71;
+RareMapFakeAllProps.mapDropChance = 90;
+RareMapFakeAllProps.mapItemRarity = 17;
+RareMapFakeAllProps.sectionCount = 6;
+// #endregion
+
+// #region FracturedItem
+export const FracturedItem = new TestItem(`Item Class: Bows
+Rarity: Rare
+Miracle Siege
+Obliterator Bow
+--------
+Quality: +25% (augmented)
+Physical Damage: 381-705 (augmented)
+Critical Hit Chance: 9.40% (augmented)
+Attacks per Second: 1.15
+--------
+Requires: Level 78, 163 (unmet) Dex
+--------
+Sockets: S S
+--------
+Item Level: 81
+--------
+36% increased Physical Damage (rune)
+--------
+{ Implicit Modifier }
+50% reduced Projectile Range
+--------
+{ Prefix Modifier "Flaring" (Tier: 1) — Damage, Physical, Attack }
+Adds 32(26-39) to 59(44-66) Physical Damage (fractured)
+
+{ Prefix Modifier "Bloodthirsty" (Tier: 4) — Damage, Physical, Attack }
+134(110-134)% increased Physical Damage
+
+{ Prefix Modifier "Champion's" (Tier: 4) — Damage, Physical, Attack }
+54(45-54)% increased Physical Damage
++113(98-123) to Accuracy Rating
+
+{ Suffix Modifier "of the Essence" — Speed }
+20(20-25)% chance to gain Onslaught on Killing Hits with this Weapon
+
+{ Suffix Modifier "of the Essence" — Attack }
++3 to Level of all Attack Skills
+
+{ Suffix Modifier "of Ruin" (Tier: 2) — Attack, Critical }
++4.4(3.81-4.4)% to Critical Hit Chance
+
+--------
+Fractured Item
+`);
+FracturedItem.category = ItemCategory.Bow;
+FracturedItem.rarity = ItemRarity.Rare;
+FracturedItem.quality = 25;
+FracturedItem.weaponPHYSICAL = 624;
+FracturedItem.weaponAS = 1.15;
+FracturedItem.weaponCRIT = 9.4;
+FracturedItem.itemLevel = 81;
+FracturedItem.requires = {
+  level: 78,
+  str: 163,
+  dex: 0,
+  int: 0,
+};
+
+FracturedItem.info.refName = "Obliterator Bow";
+FracturedItem.isFractured = true;
+FracturedItem.prefixCount = 3;
+FracturedItem.suffixCount = 3;
+FracturedItem.implicitCount = 1;
+FracturedItem.sectionCount = 9;
+FracturedItem.augmentSockets = {
+  empty: 0,
+  current: 2,
+  normal: 2,
+};
+// #endregion
+
+// #region FracturedItemNoModMarked
+export const FracturedItemNoModMarked = new TestItem(`Item Class: Bows
+Rarity: Rare
+Miracle Siege
+Obliterator Bow
+--------
+Quality: +25% (augmented)
+Physical Damage: 381-705 (augmented)
+Critical Hit Chance: 9.40% (augmented)
+Attacks per Second: 1.15
+--------
+Requires: Level 78, 163 (unmet) Dex
+--------
+Sockets: S S
+--------
+Item Level: 81
+--------
+36% increased Physical Damage (rune)
+--------
+{ Implicit Modifier }
+50% reduced Projectile Range
+--------
+{ Prefix Modifier "Flaring" (Tier: 1) — Damage, Physical, Attack }
+Adds 32(26-39) to 59(44-66) Physical Damage
+
+{ Prefix Modifier "Bloodthirsty" (Tier: 4) — Damage, Physical, Attack }
+134(110-134)% increased Physical Damage
+
+{ Prefix Modifier "Champion's" (Tier: 4) — Damage, Physical, Attack }
+54(45-54)% increased Physical Damage
++113(98-123) to Accuracy Rating
+
+{ Suffix Modifier "of the Essence" — Speed }
+20(20-25)% chance to gain Onslaught on Killing Hits with this Weapon
+
+{ Suffix Modifier "of the Essence" — Attack }
++3 to Level of all Attack Skills
+
+{ Suffix Modifier "of Ruin" (Tier: 2) — Attack, Critical }
++4.4(3.81-4.4)% to Critical Hit Chance
+
+--------
+Fractured Item
+`);
+FracturedItemNoModMarked.category = ItemCategory.Bow;
+FracturedItemNoModMarked.rarity = ItemRarity.Rare;
+FracturedItemNoModMarked.quality = 25;
+FracturedItemNoModMarked.weaponPHYSICAL = 381.5;
+FracturedItemNoModMarked.weaponAS = 1.15;
+FracturedItemNoModMarked.weaponCRIT = 9.4;
+FracturedItemNoModMarked.itemLevel = 81;
+FracturedItemNoModMarked.requires = {
+  level: 78,
+  str: 163,
+  dex: 0,
+  int: 0,
+};
+
+FracturedItemNoModMarked.info.refName = "Obliterator Bow";
+FracturedItemNoModMarked.isFractured = true;
+FracturedItemNoModMarked.prefixCount = 3;
+FracturedItemNoModMarked.suffixCount = 3;
+FracturedItemNoModMarked.implicitCount = 1;
+FracturedItemNoModMarked.sectionCount = 9;
+FracturedItemNoModMarked.augmentSockets = {
+  empty: 0,
+  current: 2,
+  normal: 2,
+};
+// #endregion
+
+// #region RequiresOneAttribute
+export const RequiresOneAttribute = new TestItem(`Item Class: Boots
+Rarity: Rare
+Dunerunner Sandals
+--------
+Energy Shield: 58
+--------
+Requires: 78 (unmet) Intelligence
+--------
+Item Level: 68
+--------
+Unidentified
+`);
+
+RequiresOneAttribute.category = ItemCategory.Boots;
+RequiresOneAttribute.rarity = ItemRarity.Rare;
+RequiresOneAttribute.itemLevel = 68;
+RequiresOneAttribute.armourES = 58;
+RequiresOneAttribute.requires = {
+  level: 0,
+  str: 0,
+  dex: 0,
+  int: 78,
+};
+
+RequiresOneAttribute.info.refName = "Dunerunner Sandals";
+RequiresOneAttribute.sectionCount = 5;
+RequiresOneAttribute.isUnidentified = true;
 // #endregion

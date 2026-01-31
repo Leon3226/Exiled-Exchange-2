@@ -7,7 +7,6 @@ import { sumStatsByModType } from "@/parser/modifiers";
 import { ItemCategory, ItemRarity, ParsedItem } from "@/parser";
 import type { FilterPreset } from "./interfaces";
 import { PriceCheckWidget } from "@/web/overlay/widgets";
-import { handleApplyItemEdits } from "./fill-runes";
 import { hasCraftingValue, likelyFinishedItem } from "./common";
 
 const ROMAN_NUMERALS = ["I", "II", "III", "IV", "V"];
@@ -22,7 +21,7 @@ export function createPresets(
     searchStatRange: number;
     useEn: boolean;
     defaultAllSelected: boolean;
-    autoFillEmptyRuneSockets: PriceCheckWidget["autoFillEmptyRuneSockets"];
+    autoFillEmptyAugmentSockets: PriceCheckWidget["autoFillEmptyRuneSockets"];
   },
 ): { presets: FilterPreset[]; active: string } {
   if (item.info.refName === "Expedition Logbook") {
@@ -45,7 +44,6 @@ export function createPresets(
     (item.category === ItemCategory.Relic &&
       item.rarity !== ItemRarity.Unique) ||
     item.category === ItemCategory.Tincture ||
-    item.category === ItemCategory.Map ||
     item.category === ItemCategory.MemoryLine ||
     item.category === ItemCategory.Invitation ||
     item.category === ItemCategory.HeistContract ||
@@ -72,20 +70,20 @@ export function createPresets(
     stats: initUiModFilters(item, opts),
   };
 
-  // Apply runes if we should
-  if (
-    (item.rarity === ItemRarity.Magic || item.rarity === ItemRarity.Rare) &&
-    pseudoPreset.filters.itemEditorSelection &&
-    !pseudoPreset.filters.itemEditorSelection.disabled &&
-    opts.autoFillEmptyRuneSockets
-  ) {
-    handleApplyItemEdits(
-      pseudoPreset.stats,
-      item,
-      pseudoPreset.filters.tempRuneStorage ?? [],
-      opts.autoFillEmptyRuneSockets ?? "None",
-    );
-  }
+  // Apply augments if we should
+  // if (
+  //   (item.rarity === ItemRarity.Magic || item.rarity === ItemRarity.Rare) &&
+  //   pseudoPreset.filters.itemEditorSelection &&
+  //   !pseudoPreset.filters.itemEditorSelection.disabled &&
+  //   opts.autoFillEmptyAugmentSockets
+  // ) {
+  //   handleApplyItemEdits(
+  //     pseudoPreset.stats,
+  //     item,
+  //     pseudoPreset.filters.tempAugmentStorage ?? [],
+  //     opts.autoFillEmptyAugmentSockets ?? "None",
+  //   );
+  // }
 
   if (likelyFinishedItem(item) || !hasCraftingValue(item)) {
     return { active: pseudoPreset.id, presets: [pseudoPreset] };

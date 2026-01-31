@@ -10,7 +10,7 @@ import {
   calculatedStatToFilter,
   FiltersCreationContext,
 } from "../create-stat-filters";
-import type { StatFilter } from "../interfaces";
+import { type StatFilter } from "../interfaces";
 import { ARMOUR_STATS, WEAPON_STATS } from "./item-property";
 import { tryParseTranslation } from "@/parser/stat-translations";
 
@@ -114,8 +114,8 @@ const PSEUDO_RULES: PseudoRule[] = [
     mutate(filter) {
       if (
         filter.sources.length === 1 &&
-        (filter.sources[0].modifier.info.type === ModifierType.Rune ||
-          filter.sources[0].modifier.info.type === ModifierType.AddedRune)
+        (filter.sources[0].modifier.info.type === ModifierType.Augment ||
+          filter.sources[0].modifier.info.type === ModifierType.AddedAugment)
       ) {
         filter.hidden = "filters.hide_crafted_chaos";
       } else {
@@ -202,6 +202,15 @@ const PSEUDO_RULES: PseudoRule[] = [
   {
     pseudo: stat("#% increased Movement Speed"),
     stats: [{ ref: stat("#% increased Movement Speed") }],
+    mutate(filter) {
+      if (
+        filter.sources.length !== 1 ||
+        (filter.sources.length === 1 &&
+          filter.sources[0].modifier.info.type !== ModifierType.Implicit)
+      ) {
+        filter.disabled = false;
+      }
+    },
   },
   // {
   //   pseudo: stat("#% total increased Physical Damage"),
@@ -488,7 +497,7 @@ export function translatedEffectsPseudos(translated: string): boolean {
   // get the ref from the translated string
   const stat = tryParseTranslation(
     { string: translated, unscalable: false },
-    ModifierType.Rune,
+    ModifierType.Augment,
   );
   if (!stat) return false;
   const ref = stat.stat.ref;

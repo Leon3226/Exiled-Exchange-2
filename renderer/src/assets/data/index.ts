@@ -3,11 +3,8 @@ import type {
   BaseType,
   CatboostModelCollection,
   DropEntry,
-  ItemCategoryToEmptyPrefix,
-  ItemTypeVectorDataCollection,
-  RuneDataByRune,
-  RuneDataByTradeId,
-  RuneSingleValue,
+  AugmentDataByAugment,
+  AugmentDataByTradeId,
   Stat,
   StatMatcher,
   TranslationDict,
@@ -20,15 +17,11 @@ export let ITEM_DROP: DropEntry[];
 export let CLIENT_STRINGS: TranslationDict;
 export let CLIENT_STRINGS_REF: TranslationDict;
 export let APP_PATRONS: Array<{ from: string; months: number; style: number }>;
-export let RUNE_SINGLE_VALUE: RuneSingleValue;
-export let RUNE_DATA_BY_RUNE: RuneDataByRune;
-export let RUNE_DATA_BY_TRADE_ID: RuneDataByTradeId;
-export let ITEM_CATEGORY_TO_EMPTY_PREFIX: ItemCategoryToEmptyPrefix;
-export let ITEM_VECTOR_DATA: ItemTypeVectorDataCollection;
-export let GRADIENT_BOOSTING_MODELS: CatboostModelCollection;
+export let AUGMENT_DATA_BY_AUGMENT: AugmentDataByAugment;
+export let AUGMENT_DATA_BY_TRADE_ID: AugmentDataByTradeId;
 
-export let RUNE_LIST: BaseType[];
-export const HIGH_VALUE_RUNES_HARDCODED = new Set<string>([]);
+export let AUGMENT_LIST: BaseType[];
+export const HIGH_VALUE_AUGMENTS_HARDCODED = new Set<string>([]);
 
 export let ITEM_BY_TRANSLATED = (
   ns: BaseType["namespace"],
@@ -57,7 +50,7 @@ export let STATS_ITERATOR = function* (
   andIncludes?: string[],
 ): Generator<Stat> {};
 
-let localRuneFilter: (
+let localAugmentFilter: (
   value: BaseType,
   index: number,
   array: BaseType[],
@@ -184,10 +177,6 @@ async function loadItems(language: string, isTest = false) {
     ITEMS_ITERATOR('refName":"Replica'),
   );
 
-  RUNE_SINGLE_VALUE = await (
-    await fetch(`${import.meta.env.BASE_URL}data/rune-single-value.json`)
-  ).json();
-
   TRADE_TAG_TO_REF = new Map<string, string>();
   for (const item of ITEMS_ITERATOR('"tradeTag":')) {
     TRADE_TAG_TO_REF.set(item.tradeTag!, item.refName);
@@ -272,10 +261,6 @@ export async function init(lang: string, isTest = false) {
     await fetch(`${import.meta.env.BASE_URL}data/patrons.json`)
   ).json();
 
-  ITEM_CATEGORY_TO_EMPTY_PREFIX = await (
-    await fetch(`${import.meta.env.BASE_URL}data/pseudo-empty-prefix.json`)
-  ).json();
-
   await loadForLang(lang, isTest);
 
   let failed = false;
@@ -299,90 +284,92 @@ export async function init(lang: string, isTest = false) {
   DELAYED_STAT_VALIDATION.clear();
 }
 
-export function setLocalRuneFilter(
+export function setLocalAugmentFilter(
   filter: (value: BaseType, index: number, array: BaseType[]) => unknown,
 ) {
-  localRuneFilter = filter;
+  localAugmentFilter = filter;
 }
 
 export async function loadForLang(lang: string, isTest = false) {
   CLIENT_STRINGS = await loadClientStrings(lang);
   await loadItems(lang);
   await loadStats(lang);
-  loadUltraLateItems(localRuneFilter);
+  loadUltraLateItems(localAugmentFilter);
 }
 
 export function loadUltraLateItems(
-  runeFilter: (value: BaseType, index: number, array: BaseType[]) => unknown,
+  augmentFilter: (value: BaseType, index: number, array: BaseType[]) => unknown,
 ) {
   const a = Array.from(ITEMS_ITERATOR('"craftable": {"category": "SoulCore"}'));
-  const b = a.filter((r) => r.rune && r.rune.some((s) => s.tradeId));
+  const b = a.filter((r) => r.augment && r.augment.some((s) => s.tradeId));
   const c = b.map((r) => ({
     ...r,
-    rune: r.rune!.filter((s) => s.tradeId),
+    augment: r.augment!.filter((s) => s.tradeId),
   }));
-  const d = c.filter(runeFilter);
+  const d = c.filter(augmentFilter);
 
-  RUNE_LIST = d;
+  AUGMENT_LIST = d;
 
-  RUNE_DATA_BY_RUNE = runesToLookup(RUNE_LIST);
+  AUGMENT_DATA_BY_AUGMENT = augmentsToLookup(AUGMENT_LIST);
 
-  RUNE_DATA_BY_TRADE_ID = runesToLookupTradeId(RUNE_LIST);
+  AUGMENT_DATA_BY_TRADE_ID = augmentsToLookupTradeId(AUGMENT_LIST);
 }
 
-function runesToLookup(runeList: BaseType[]): RuneDataByRune {
-  const runeDataByRune: RuneDataByRune = {};
+function augmentsToLookup(augmentList: BaseType[]): AugmentDataByAugment {
+  const augmentDataByAugment: AugmentDataByAugment = {};
 
-  for (const rune of runeList) {
-    if (!rune.rune) continue;
-    for (const runeStat of rune.rune) {
-      const { categories, string: text, values, tradeId } = runeStat;
+  for (const augment of augmentList) {
+    if (!augment.augment) continue;
+    for (const augmentStat of augment.augment) {
+      const { categories, string: text, values, tradeId } = augmentStat;
       if (!tradeId) continue;
-      if (!runeDataByRune[rune.refName]) {
-        runeDataByRune[rune.refName] = [];
+      if (!augmentDataByAugment[augment.refName]) {
+        augmentDataByAugment[augment.refName] = [];
       }
-      runeDataByRune[rune.refName].push({
-        rune: rune.name,
-        refName: rune.refName,
+      augmentDataByAugment[augment.refName].push({
+        augment: augment.name,
+        refName: augment.refName,
         baseStat: text,
         values,
         id: tradeId[0],
         categories,
-        icon: rune.icon,
+        icon: augment.icon,
       });
     }
   }
 
-  return runeDataByRune;
+  return augmentDataByAugment;
 }
 
-function runesToLookupTradeId(runeList: BaseType[]): RuneDataByTradeId {
-  const runeDataByRune: RuneDataByTradeId = {};
+function augmentsToLookupTradeId(
+  augmentList: BaseType[],
+): AugmentDataByTradeId {
+  const augmentDataByAugment: AugmentDataByTradeId = {};
 
-  for (const rune of runeList) {
-    if (!rune.rune) continue;
-    for (const runeStat of rune.rune) {
-      const { categories, string: text, values, tradeId } = runeStat;
+  for (const augment of augmentList) {
+    if (!augment.augment) continue;
+    for (const augmentStat of augment.augment) {
+      const { categories, string: text, values, tradeId } = augmentStat;
       if (!tradeId) continue;
-      if (!runeDataByRune[tradeId[0]]) {
-        runeDataByRune[tradeId[0]] = [];
+      if (!augmentDataByAugment[tradeId[0]]) {
+        augmentDataByAugment[tradeId[0]] = [];
       }
-      runeDataByRune[tradeId[0]].push({
-        rune: rune.name,
+      augmentDataByAugment[tradeId[0]].push({
+        augment: augment.name,
         baseStat: text,
         values,
         id: tradeId[0],
         categories,
-        icon: rune.icon,
+        icon: augment.icon,
       });
     }
   }
 
-  return runeDataByRune;
+  return augmentDataByAugment;
 }
 
 // Disable since this is export for tests
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const __testExports = {
-  runesToLookup,
+  augmentsToLookup,
 };

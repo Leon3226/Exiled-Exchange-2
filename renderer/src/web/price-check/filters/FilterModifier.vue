@@ -35,15 +35,15 @@
         </button>
         <div class="flex items-baseline gap-x-1">
           <div
-            v-if="showRuneNotice"
+            v-if="showAugmentNotice"
             :class="$style['qualityLabel']"
             class="self-center"
           >
             <img
               :src="
-                showRuneNotice === '%NOT_FOUND%'
+                showAugmentNotice === '%NOT_FOUND%'
                   ? '/images/404.png'
-                  : showRuneNotice
+                  : showAugmentNotice
               "
               class="min-w-5 min-h-5 w-5 h-5"
             />
@@ -113,9 +113,15 @@
               }}</span
             >
             <filter-modifier-tiers :filter="filter" :item="item" />
-            <filter-modifier-item-has-empty :filter="filter" />
+            <filter-modifier-item-has-empty
+              :filter="filter"
+              v-if="tradeId === 'item.has_empty_modifier'"
+            />
           </div>
-          <filter-modifier-item-is-elemental :filter="filter" />
+          <filter-modifier-item-is-elemental
+            :filter="filter"
+            v-if="tradeId === 'item.elemental_dps'"
+          />
         </div>
 
         <stat-roll-slider
@@ -131,7 +137,7 @@
       </div>
     </div>
     <div class="flex flex-col">
-      <modifier-anointment :filter="filter" />
+      <modifier-anointment :filter="filter" v-if="filter.oils" />
     </div>
   </div>
 </template>
@@ -198,7 +204,7 @@ export default defineComponent({
         ),
     );
 
-    const showRuneNotice = computed(() => {
+    const showAugmentNotice = computed(() => {
       if (props.filter.editorAdded) {
         return props.filter.editorAdded.icon;
       }
@@ -285,7 +291,7 @@ export default defineComponent({
     return {
       t,
       showTag,
-      showRuneNotice,
+      showAugmentNotice,
       showQ20Notice,
       calcQuality,
       inputMinEl,
@@ -362,6 +368,11 @@ export default defineComponent({
             props.item.info.refName.startsWith("Time-Lost")) ||
           text.value.startsWith(_$.GRANTS_SKILL),
       ),
+      tradeId: computed(() => {
+        if (props.filter.tradeId.length > 0) {
+          return props.filter.tradeId[0];
+        }
+      }),
     };
   },
 });
@@ -538,6 +549,9 @@ export default defineComponent({
 }
 .tag-desecrated {
   @apply bg-green-900 text-green-100;
+}
+.tag-mutated {
+  @apply bg-rose-900 text-yellow-100;
 }
 </style>
 

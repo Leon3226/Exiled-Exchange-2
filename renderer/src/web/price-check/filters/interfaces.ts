@@ -37,7 +37,7 @@ export interface ItemFilters {
   socketNumber?: FilterNumeric;
   linkedSockets?: FilterNumeric;
   whiteSockets?: FilterNumeric;
-  runeSockets?: FilterNumeric;
+  augmentSockets?: FilterNumeric;
   itemEditorSelection?: { disabled: boolean; editing: boolean; value: string };
   corrupted?: {
     value: boolean;
@@ -73,21 +73,29 @@ export interface ItemFilters {
   };
   veiled?: {
     statRefs: string[];
+    veiledCount: number;
     disabled: boolean;
   };
   areaLevel?: FilterNumeric;
   heistWingsRevealed?: FilterNumeric;
   sentinelCharge?: FilterNumeric;
+  usesRemaining?: FilterNumeric;
   trade: {
     offline: boolean;
     onlineInLeague: boolean;
-    listingType: "any" | "online" | "securable" | "available";
+    listingType: "any" | "online" | "securable" | "available" | "onlineleague";
     listed: string | undefined;
     currency: string | undefined;
     league: string;
     collapseListings: "api" | "app";
   };
-  tempRuneStorage?: StatFilter[];
+  tempAugmentStorage?: StatFilter[];
+  requires?: {
+    level?: FilterNumeric;
+    str?: FilterNumeric;
+    dex?: FilterNumeric;
+    int?: FilterNumeric;
+  };
 }
 
 export interface FilterNumeric {
@@ -128,7 +136,10 @@ export interface StatFilter {
   hidden?: string;
   disabled: boolean; // NOTE: mutable in UI
   additionalInfo?: {
-    [key: string]: StatFilterRoll;
+    elementalInfo?: {
+      [key: string]: StatFilterRoll;
+    };
+    emptyModifierInfo?: Record<ItemHasEmptyModifier, number>;
   };
   editorAdded?: BaseType;
 }
@@ -152,6 +163,13 @@ export const INTERNAL_TRADE_IDS = [
   "item.has_elemental_lightning_affix",
   "item.reload_time",
   "item.rarity_magic",
+  "item.map_revives",
+  "item.map_pack_size",
+  "item.map_drop_chance",
+  "item.map_item_rarity",
+  "item.map_magic_monsters",
+  "item.map_rare_monsters",
+  "item.map_gold",
 ] as const;
 
 export type InternalTradeId = (typeof INTERNAL_TRADE_IDS)[number];
@@ -190,8 +208,9 @@ export enum FilterTag {
   Delve = "explicit-delve",
   Unveiled = "explicit-veiled",
   Incursion = "explicit-incursion",
-  Rune = "rune",
-  AddedRune = "added-rune",
+  Augment = "rune",
+  AddedAugment = "added-rune",
   Desecrated = "desecrated",
   Skill = "skill",
+  Mutated = "mutated",
 }

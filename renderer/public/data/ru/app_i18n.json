@@ -66,11 +66,12 @@
     "elemental_dps": "Стихийный ДПС: {0}",
     "crit": "Шанс критического удара: {0}%",
     "aps": "Атак в секунду: {0}",
-    "has_empty_modifier": "1 свободное или ремесленное свойство",
+    "has_empty_modifier": "{0} свободное или ремесленное свойство",
     "has_empty_affix": "Любое",
     "has_empty_prefix": "Префикс",
     "has_empty_suffix": "Суффикс",
     "item_level": "Ур. предмета: {0}",
+    "requires_level": "Требуется Уровень: {0}",
     "spirit": "Дух: {0}",
     "reload_time": "Время перезарядки: {0}",
     "stock": "Запас: {0}",
@@ -80,12 +81,14 @@
     "linked_sockets": "Связи: {0}",
     "white_sockets": "Белые: {0}",
     "gem_sockets": "Гнёзда: {0}",
-    "rune_sockets": "Гнёзда: {0}",
+    "augment_sockets": "Гнёзда: {0}",
     "quality": "Качество: {0}",
     "gem_level": "Уровень: {0}",
     "sentinel_charge": "Заряд: {0}",
     "find_in_stash": "Найти в тайнике",
-    "find_same_price": "Filter by Price",
+    "find_same_price": "Filter by",
+    "find_same_price_type": "Filter by:",
+    "price": "Price Only",
     "parse_error": "Произошла ошибка при парсинге предмета",
     "parse_error_help": "Скорее всего, это ошибка, и вы можете сообщить о ней на GitHub.",
     "unknown": "Неизвестный предмет",
@@ -104,6 +107,7 @@
     "mod_explicit": "Свойство",
     "mod_crafted": "Мастерский",
     "mod_scourge": "Преображённое",
+    "mod_rune": "усилителей",
     "unidentified": "Неопознанный",
     "veiled": "Завуалирован",
     "foil_unique": "Реликвия",
@@ -116,7 +120,15 @@
     "has_elemental_fire_affix": "Fire",
     "has_elemental_cold_affix": "Cold",
     "has_elemental_lightning_affix": "Lightning",
-    "rarity_magic": "Редкость: Волшебный"
+    "rarity_magic": "Редкость: Волшебный",
+    "map_revives": "Доступно возрождений: {0}",
+    "map_pack_size": "Размер групп монстров: +{0}%",
+    "map_magic_monsters": "Волшебные монстры: +{0}%",
+    "map_rare_monsters": "Редкие монстры: +{0}%",
+    "map_drop_chance": "Шанс выпадения путевого камня: +{0}%",
+    "map_item_rarity": "Редкость предметов: +{0}%",
+    "map_gold": "Выпадение золота: +{0}%",
+    "uses_remaining": "Осталось использовать: {0}"
   },
   "item_category": {
     "prop": "Категория: {0}",
@@ -163,12 +175,14 @@
     "weapon_spear": "Копьё",
     "weapon_flail": "Кистень",
     "armour_buckler": "Баклер",
-    "map_tablet": "Tablet"
+    "map_tablet": "Tablet",
+    "weapon_talisman": "Талисман"
   },
   "filters": {
     "selected_some": "Св-ва: {0} из {1}",
     "selected_none": "Св-ва не важны",
-    "hidden_toggle": "Скрытые",
+    "hidden_toggle": "свойство",
+    "hidden_explicit_toggle": "Explicit",
     "collapse": "Свернуть",
     "mods_toggle": "Моды",
     "empty": "Подходящие свойства не найдены",
@@ -185,6 +199,8 @@
     "hide_empty_mod": "Выбирайте, только если у предмета 6 свойств (1 из которых ремесленное) или если у него 5 свойств",
     "hide_low_ilvl": "Item has too low an item level to roll all mods",
     "hide_not_max_level": "Non max level granted skills rarely add value",
+    "hide_for_map": "Most map modifiers have no value",
+    "hide_revives": "Select only if not 0 and don't want to exalt it?",
     "tag_crafted": "мастер",
     "tag_fractured": "расколотый",
     "tag_scourge": "преображен",
@@ -205,11 +221,12 @@
     "tag_explicit_delve": "Спуск",
     "tag_explicit_veiled": "Завуалирован",
     "tag_explicit_incursion": "Вмешательство",
-    "tag_rune": "Руна",
-    "tag_added_rune": "Руна",
+    "tag_rune": "усилителей",
+    "tag_added_rune": "усилителей",
     "tag_sanctum": "Святилище",
     "tag_desecrated": "Очернённый",
     "tag_skill": "Skill",
+    "tag_mutated": "Mutated",
     "fill_rune_iron": "Fill Runes(Iron)",
     "grade": "Грейд {0}",
     "hybrid_note": "Tier may be incorrect due to the potential for a hybrid mod"
@@ -343,7 +360,8 @@
     "stack": "Стак",
     "fix_complex_query": "Отключите \"Use pseudo mods\" в настройках или залогиньтесь во встроенном браузере",
     "likely_price_fixed": "Mostly non-standard currency: ",
-    "filter_exalt_divine": "Filter by Exalt/Divine"
+    "filter_exalt_divine": "Filter by Exalt/Divine",
+    "highest_volume": "Highest volume:"
   },
   "settings": {
     "title": "Настройки - Exiled Exchange 2",
@@ -385,7 +403,9 @@
     "tip_frequency_5": "Очень редко",
     "tip_frequency_6": "Никогда",
     "tips_header": "Циклически отображать все подсказки:",
-    "tip_number_header": "Подсказка #{0}"
+    "tip_number_header": "Подсказка #{0}",
+    "read_client_log": "Allow reading of Client.txt file",
+    "client_log_explain": "Client.txt log file contains debugging info and chat logs. This is used to detect zone changes and player level ups."
   },
   "price_check": {
     "name": "Прайс-чек",
@@ -417,7 +437,9 @@
     "tier_numbering_help": "Во избежание недоразумений связанных с системой наименований в игре, тиры из PoE1 будут называться \"Grade\" вместо \"Tier\". ",
     "always_show_tier": "Always show tier",
     "remember_ratio": "Remember currency ratio",
-    "open_editor_above": "Open rune socket selector upwards"
+    "open_editor_above": "Open rune socket selector upwards",
+    "core_currency": "Primary base currency:",
+    "show_volume": "Show Currency Exchange volume per hour:"
   },
   "poe2_new": {
     "beta_warning": "Функционал для PoE2 находится в стадии бета тестирования и не всегда работает так, как задумано.",
@@ -460,5 +482,15 @@
     "tip_28": "Вы можете изменить вашу лигу в настройках",
     "tip_29": "Вы можете добавить горячие клавиши для пользовательских команд чата в настройках",
     "tip_30": "Мы не говорим о Exiled Exchange 1"
+  },
+  "leveling": {
+    "name": "Leveling",
+    "enable_read_client_logs": "Leveling widgets require allowing reading of client logs",
+    "exp_tracking": "Experience Tracker",
+    "show_exp": "Show experience gain percentage",
+    "exp_tracking_help_tldr": "TLDR: try to keep 'Over' at 0 or 1",
+    "exp_tracking_help": "XP tracking widget shows your current level, current experience multiplier, and how close you are to being under-leveled. XP penalty is applied immediately if you are over-leveled, and when you are under-leveled by \u230A level/16 + 3 \u230B. The 'Over' is how many levels the your current level is over the bottom of the 'safe zone', generally 0 or 1 means you are killing the highest level monsters you can without incurring the under-leveled penalty",
+    "exp_inspire": "Based on ",
+    "exp_astrict": "*Experience gain percentages, when over level 95, or monster level over 70, or potentially when not at 100% exp gain, may not be fully tested and accurate."
   }
 }

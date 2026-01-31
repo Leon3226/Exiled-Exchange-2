@@ -7,9 +7,7 @@ import { useData } from 'vitepress'
 
 const { theme } = useData()
 </script>
-<div style="background-color: #7c2d12; color: white; padding: 10px; text-align: center; font-weight: bold; border-radius: 5px;">
-  ⚠️ This is in beta for PoE2. <br/> Please be aware that there may be bugs or issues.
-</div>
+
 You can download Exiled Exchange 2 here. Any other mirrors are not known
 to the developer, downloading from them may be unsafe or malicious.
 
@@ -60,4 +58,3 @@ In order for Exiled Exchange 2 to have access to the PoE window, it must be star
     - `config.json`
 7. **IMPORTANT:** Edit `config.json` and change the value of "windowTitle": "Path of Exile" to instead be "Path of Exile 2", otherwise it will open only for poe1
 8. Start Exiled Exchange 2 and PoE2
-

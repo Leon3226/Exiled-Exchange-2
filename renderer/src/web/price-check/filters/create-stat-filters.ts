@@ -21,6 +21,7 @@ import {
 import { filterPseudo } from "./pseudo";
 import { applyRules as applyAtzoatlRules } from "./pseudo/atzoatl-rules";
 import { applyRules as applyMirroredTabletRules } from "./pseudo/reflection-rules";
+import { applyRules as applyMissingFracturedRules } from "./pseudo/missing-fractured-rules";
 import { filterItemProp, filterBasePercentile } from "./pseudo/item-property";
 import { decodeOils, applyAnointmentRules } from "./pseudo/anointments";
 import { StatBetter, CLIENT_STRINGS } from "@/assets/data";
@@ -39,6 +40,7 @@ export function createExactStatFilters(
   statsByType: StatCalculated[],
   opts: { searchStatRange: number; defaultAllSelected: boolean },
 ): StatFilter[] {
+  performance.mark("create-exact-filters-start");
   if (item.mapBlighted || item.category === ItemCategory.Invitation) return [];
   if (
     item.isUnidentified &&
@@ -130,17 +132,40 @@ export function createExactStatFilters(
     }
   }
 
+  // fractured but no mods are actually fractured (bug in game: https://www.pathofexile.com/forum/view-thread/3891367)
+  if (
+    ctx.item.isFractured &&
+    !ctx.filters.some((f) => f.tag === FilterTag.Fractured)
+  ) {
+    const explicitStats = statsByType
+      .filter((calc) => calc.type === ModifierType.Explicit)
+      .map((mod) => calculatedStatToFilter(mod, ctx.searchInRange, item));
+    applyMissingFracturedRules(ctx.filters, explicitStats);
+  }
+
   const hasEmptyModifier = showHasEmptyModifier(ctx);
   if (hasEmptyModifier !== false) {
+    const roll = hasEmptyModifier.counts[hasEmptyModifier.empty];
     ctx.filters.push({
       tradeId: ["item.has_empty_modifier"],
-      text: "1 Empty or Crafted Modifier",
-      statRef: "1 Empty or Crafted Modifier",
+      text: "# Empty Modifier",
+      statRef: "# Empty Modifier",
       disabled: false,
       tag: FilterTag.Pseudo,
       sources: [],
       option: {
-        value: hasEmptyModifier,
+        value: hasEmptyModifier.empty,
+      },
+      additionalInfo: {
+        emptyModifierInfo: hasEmptyModifier.counts,
+      },
+      roll: {
+        value: roll,
+        min: roll,
+        max: undefined,
+        default: { min: roll, max: roll },
+        dp: false,
+        isNegated: false,
       },
     });
   }
@@ -172,6 +197,7 @@ export function initUiModFilters(
     defaultAllSelected: boolean;
   },
 ): StatFilter[] {
+  performance.mark("create-ui-filters-start");
   const ctx: FiltersCreationContext = {
     item,
     filters: [],
@@ -192,7 +218,7 @@ export function initUiModFilters(
 
   if (item.info.refName !== "Split Personality") {
     filterItemProp(ctx);
-    // TODO: see if there are other options here, don't want to include trade site uniques with random runes
+    // TODO: see if there are other options here, don't want to include trade site uniques with random augments
     if (item.rarity !== ItemRarity.Unique || !getMaxSockets(item)) {
       filterPseudo(ctx);
     }
@@ -300,7 +326,7 @@ export function calculatedStatToFilter(
     filter = {
       tradeId:
         stat.trade.ids[
-          type === ModifierType.AddedRune ? ModifierType.Rune : type
+          type === ModifierType.AddedAugment ? ModifierType.Augment : type
         ],
       statRef: stat.ref,
       text:
@@ -321,7 +347,7 @@ export function calculatedStatToFilter(
   filter ??= {
     tradeId:
       stat.trade.ids[
-        type === ModifierType.AddedRune ? ModifierType.Rune : type
+        type === ModifierType.AddedAugment ? ModifierType.Augment : type
       ],
     statRef: stat.ref,
     text: translation.string,
@@ -339,6 +365,13 @@ export function calculatedStatToFilter(
       filter.tag = FilterTag.Synthesised;
     }
   } else if (type === ModifierType.Explicit) {
+    if (
+      item.rarity === ItemRarity.Unique &&
+      sources.some((s) => s.modifier.info.generation === "mutated")
+    ) {
+      filter.tag = FilterTag.Mutated;
+    }
+
     if (item.info.unique?.fixedStats) {
       const fixedStats = item.info.unique.fixedStats;
       if (!fixedStats.includes(filter.statRef)) {
@@ -568,21 +601,33 @@ export function finalFilterTweaks(ctx: FiltersCreationContext) {
     item.info.refName !== "Morior Invictus" &&
     item.info.refName !== "Darkness Enthroned"
   ) {
-    hideAllRunes(ctx.filters);
+    hideAllAugments(ctx.filters);
   }
 
   const hasEmptyModifier = showHasEmptyModifier(ctx);
   if (hasEmptyModifier !== false) {
+    const roll = hasEmptyModifier.counts[hasEmptyModifier.empty];
     ctx.filters.push({
       tradeId: ["item.has_empty_modifier"],
-      text: "1 Empty or Crafted Modifier",
-      statRef: "1 Empty or Crafted Modifier",
+      text: "# Empty Modifier",
+      statRef: "# Empty Modifier",
       disabled: true,
       hidden: "filters.hide_empty_mod",
       tag: FilterTag.Pseudo,
       sources: [],
       option: {
-        value: hasEmptyModifier,
+        value: hasEmptyModifier.empty,
+      },
+      additionalInfo: {
+        emptyModifierInfo: hasEmptyModifier.counts,
+      },
+      roll: {
+        value: roll,
+        min: roll,
+        max: undefined,
+        default: { min: roll, max: roll },
+        dp: false,
+        isNegated: false,
       },
     });
   }
@@ -610,6 +655,15 @@ export function finalFilterTweaks(ctx: FiltersCreationContext) {
       filter.disabled = filter.roll.value < 20;
       if (filter.disabled) {
         filter.hidden = "filters.hide_not_max_level";
+      }
+    }
+    if (ctx.item.category === ItemCategory.Map) {
+      if (
+        filter.tag !== FilterTag.Property &&
+        filter.tag !== FilterTag.Desecrated
+      ) {
+        filter.disabled = true;
+        filter.hidden = "filters.hide_for_map";
       }
     }
   }
@@ -690,9 +744,12 @@ function applyFlaskRules(filters: StatFilter[]) {
   }
 }
 
-function hideAllRunes(filters: StatFilter[]) {
+function hideAllAugments(filters: StatFilter[]) {
   for (const filter of filters) {
-    if (filter.tag === FilterTag.Rune || filter.tag === FilterTag.AddedRune) {
+    if (
+      filter.tag === FilterTag.Augment ||
+      filter.tag === FilterTag.AddedAugment
+    ) {
       filter.hidden = "filters.hide_const_roll";
       filter.disabled = true;
     }
@@ -702,12 +759,15 @@ function hideAllRunes(filters: StatFilter[]) {
 // TODO
 // +1 Prefix Modifier allowed
 // -1 Suffix Modifier allowed
-function showHasEmptyModifier(
-  ctx: FiltersCreationContext,
-): ItemHasEmptyModifier | false {
+function showHasEmptyModifier(ctx: FiltersCreationContext):
+  | {
+      empty: ItemHasEmptyModifier;
+      counts: Record<ItemHasEmptyModifier, number>;
+    }
+  | false {
   const { item } = ctx;
 
-  if (!itemIsModifiable(item)) {
+  if (!itemIsModifiable(item) || item.category === ItemCategory.Map) {
     return false;
   }
 
@@ -718,9 +778,23 @@ function showHasEmptyModifier(
       return false;
     }
     if (magicPrefixes > 0) {
-      return ItemHasEmptyModifier.Suffix;
+      return {
+        empty: ItemHasEmptyModifier.Suffix,
+        counts: {
+          [ItemHasEmptyModifier.Prefix]: 0,
+          [ItemHasEmptyModifier.Suffix]: 1,
+          [ItemHasEmptyModifier.Any]: 1,
+        },
+      };
     } else if (magicSuffixes > 0) {
-      return ItemHasEmptyModifier.Prefix;
+      return {
+        empty: ItemHasEmptyModifier.Prefix,
+        counts: {
+          [ItemHasEmptyModifier.Prefix]: 1,
+          [ItemHasEmptyModifier.Suffix]: 0,
+          [ItemHasEmptyModifier.Any]: 1,
+        },
+      };
     }
     // magic but has no explicit mods (annulled to 0)
     return false;
@@ -731,10 +805,28 @@ function showHasEmptyModifier(
   }
 
   const { prefixes, suffixes, total } = explicitModifierCount(item);
+  const maxAmount = itemMaxModifiersBySlot(item);
 
-  if (total === 5) {
-    if (prefixes === 2) return ItemHasEmptyModifier.Prefix;
-    if (suffixes === 2) return ItemHasEmptyModifier.Suffix;
+  if (total !== maxAmount[ItemHasEmptyModifier.Any] && total !== 0) {
+    const empty =
+      suffixes === maxAmount[ItemHasEmptyModifier.Suffix]
+        ? ItemHasEmptyModifier.Prefix
+        : prefixes === maxAmount[ItemHasEmptyModifier.Prefix]
+          ? ItemHasEmptyModifier.Suffix
+          : ItemHasEmptyModifier.Any;
+
+    const counts = {
+      [ItemHasEmptyModifier.Any]: maxAmount[ItemHasEmptyModifier.Any] - total,
+      [ItemHasEmptyModifier.Prefix]:
+        maxAmount[ItemHasEmptyModifier.Prefix] - prefixes,
+      [ItemHasEmptyModifier.Suffix]:
+        maxAmount[ItemHasEmptyModifier.Suffix] - suffixes,
+    };
+
+    return {
+      empty,
+      counts,
+    };
   }
 
   return false;
@@ -761,4 +853,49 @@ function enableGoodRolledFilters(filters: StatFilter[], abovePct: number) {
       filter.disabled = false;
     }
   }
+}
+
+function itemMaxModifiersBySlot(item: ParsedItem) {
+  let base;
+  switch (item.category) {
+    case ItemCategory.Jewel:
+    case ItemCategory.Tablet:
+    case ItemCategory.Relic:
+    case ItemCategory.SanctumRelic:
+      base = 2;
+      break;
+    default:
+      base = 3;
+      break;
+  }
+
+  const maxAmount = [2 * base, base, base];
+  // TODO: change this to be programmatic based on implicits
+  if (
+    item.info.refName === "Dusk Amulet" ||
+    item.info.refName === "Dusk Ring"
+  ) {
+    maxAmount[ItemHasEmptyModifier.Prefix] += 1;
+    maxAmount[ItemHasEmptyModifier.Suffix] -= 1;
+  } else if (
+    item.info.refName === "Gloam Amulet" ||
+    item.info.refName === "Gloam Ring"
+  ) {
+    maxAmount[ItemHasEmptyModifier.Prefix] -= 1;
+    maxAmount[ItemHasEmptyModifier.Suffix] += 1;
+  } else if (
+    item.info.refName === "Penumbra Amulet" ||
+    item.info.refName === "Penumbra Ring"
+  ) {
+    maxAmount[ItemHasEmptyModifier.Prefix] += 2;
+    maxAmount[ItemHasEmptyModifier.Suffix] -= 2;
+  } else if (
+    item.info.refName === "Tenebrous Amulet" ||
+    item.info.refName === "Tenebrous Ring"
+  ) {
+    maxAmount[ItemHasEmptyModifier.Prefix] -= 2;
+    maxAmount[ItemHasEmptyModifier.Suffix] += 2;
+  }
+
+  return maxAmount;
 }

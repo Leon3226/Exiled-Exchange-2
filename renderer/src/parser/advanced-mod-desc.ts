@@ -4,8 +4,8 @@ import { ModifierType } from "./modifiers";
 import { removeLinesEnding } from "./Parser";
 
 export const SCOURGE_LINE = " (scourge)";
-export const RUNE_LINE = " (rune)";
-export const ADDED_RUNE_LINE = " (added rune)";
+export const AUGMENT_LINE = " (rune)";
+export const ADDED_AUGMENT_LINE = " (added rune)";
 export const ENCHANT_LINE = " (enchant)";
 export const IMPLICIT_LINE = " (implicit)";
 export const DESECRATED_LINE = " (desecrated)";
@@ -19,7 +19,7 @@ export interface ParsedModifier {
 
 export interface ModifierInfo {
   type: ModifierType;
-  generation?: "suffix" | "prefix" | "corrupted" | "eldritch";
+  generation?: "suffix" | "prefix" | "corrupted" | "eldritch" | "mutated";
   name?: string;
   tier?: number;
   rank?: number;
@@ -84,6 +84,11 @@ export function parseModInfoLine(
       case _$.CORRUPTED_IMPLICIT:
         generation = "corrupted";
         break;
+      case _$.IMPLICIT_MODIFIER:
+        type = ModifierType.Implicit;
+        break;
+      case _$.VAAL_UNIQUE_MODIFIER:
+        generation = "mutated";
     }
 
     name = match.groups!.name || undefined;
@@ -165,12 +170,12 @@ export function parseModType(lines: string[]): {
   } else if (lines.some((line) => line.endsWith(CRAFTED_LINE))) {
     modType = ModifierType.Crafted;
     lines = removeLinesEnding(lines, CRAFTED_LINE);
-  } else if (lines.some((line) => line.endsWith(RUNE_LINE))) {
-    modType = ModifierType.Rune;
-    lines = removeLinesEnding(lines, RUNE_LINE);
-  } else if (lines.some((line) => line.endsWith(ADDED_RUNE_LINE))) {
-    modType = ModifierType.AddedRune;
-    lines = removeLinesEnding(lines, ADDED_RUNE_LINE);
+  } else if (lines.some((line) => line.endsWith(AUGMENT_LINE))) {
+    modType = ModifierType.Augment;
+    lines = removeLinesEnding(lines, AUGMENT_LINE);
+  } else if (lines.some((line) => line.endsWith(ADDED_AUGMENT_LINE))) {
+    modType = ModifierType.AddedAugment;
+    lines = removeLinesEnding(lines, ADDED_AUGMENT_LINE);
   } else if (lines.some((line) => line.endsWith(DESECRATED_LINE))) {
     modType = ModifierType.Desecrated;
     lines = removeLinesEnding(lines, DESECRATED_LINE);

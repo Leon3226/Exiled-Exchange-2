@@ -26,6 +26,7 @@ export default defineConfig({
       "@ipc": path.resolve(__dirname, "./src/../../ipc"),
       "@specs": path.resolve(__dirname, "./specs"),
     },
+    extensions: [".ts", ".js", ".vue", ".json"],
   },
   define: {
     "import.meta.vitest": "undefined",

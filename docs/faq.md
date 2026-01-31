@@ -28,9 +28,13 @@ title: FAQ
   Don't worry, you still can use keys
   ![zoom keybinds](/reference-images/zoom-keybinds.png)
 
+- **Do Private Leagues work?**
+
+  Yes, but you will need to sign in via the builtin browser. See [here](/private-leagues) for more info
+
 - **Will my language be supported?**
 
-  No plans to support other languages. I know Awakened PoE has Russian, but I don't have plans to add other languages since I am still fixing this to work with the new game.
+  Maybe, would need the app_i18n file to be translated to your language
 
 - **I downloaded a zip with a bunch of files, but no .exe inside?**
 

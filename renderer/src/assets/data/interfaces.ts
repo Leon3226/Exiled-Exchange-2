@@ -96,7 +96,7 @@ export interface BaseType {
     ev?: [min: number, max: number];
     es?: [min: number, max: number];
   };
-  rune?: Array<{
+  augment?: Array<{
     categories: ItemCategory[];
     string: string;
     values: number[];
@@ -221,7 +221,14 @@ export interface TranslationDict {
   COLD_DAMAGE: string;
   PRICE_NOTE: string;
   WAYSTONE_TIER: string;
+  WAYSTONE_REVIVES: string;
+  WAYSTONE_PACK_SIZE: string;
+  WAYSTONE_MAGIC_MONSTERS: string;
+  WAYSTONE_RARE_MONSTERS: string;
+  WAYSTONE_DROP_CHANCE: string;
+  WAYSTONE_RARITY: string;
   WAYSTONE_HELP: string;
+  WAYSTONE_GOLD: string;
   JEWEL_HELP: string;
   SANCTUM_HELP: string;
   TIMELESS_RADIUS: string;
@@ -234,6 +241,13 @@ export interface TranslationDict {
   FRACTURED_ITEM: string;
   SANCTIFIED: string;
   HYPHEN: string;
+  LOG_LEVEL_UP: RegExp;
+  LOG_ZONE_GEN: RegExp;
+  DOUBLE_CORRUPTED: string;
+  IMPLICIT_MODIFIER: string;
+  REQUIRES_LINE: RegExp;
+  UNIQUE_MODIFIER: string;
+  VAAL_UNIQUE_MODIFIER: string;
 }
 
 export interface Filter {
@@ -252,9 +266,9 @@ export interface ItemCategoryToEmptyPrefix {
   };
 }
 
-export interface RuneSingleValue {
+export interface AugmentSingleValue {
   [id: string]: {
-    rune: string;
+    augment: string;
     baseStat: string;
     values: number[];
     id: string;
@@ -262,8 +276,8 @@ export interface RuneSingleValue {
   };
 }
 
-export interface RuneData {
-  rune: string;
+export interface AugmentData {
+  augment: string;
   refName: string;
   baseStat: string;
   values: number[];
@@ -272,16 +286,16 @@ export interface RuneData {
   icon: string;
 }
 /**
- * Key for each rune, Iron, Lesser Rebirth, Soul core of xx
+ * Key for each augment, Iron, Lesser Rebirth, Soul core of xx
  *
  * Value is each option that the value could be for, ie stat for armour or weapon.
  */
-export interface RuneDataByRune {
-  [rune: string]: RuneData[];
+export interface AugmentDataByAugment {
+  [augment: string]: AugmentData[];
 }
-export interface RuneDataByTradeId {
+export interface AugmentDataByTradeId {
   [tradeId: string]: Array<{
-    rune: string;
+    augment: string;
     baseStat: string;
     values: number[];
     id: string;

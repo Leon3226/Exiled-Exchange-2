@@ -52,11 +52,12 @@
     "aps": "秒間アタック回数: {0}",
     "spirit": "スピリット: {0}",
     "reload_time": "再装填時間: {0}",
-    "has_empty_modifier": "1つの空のまたはクラフトされたモッド",
+    "has_empty_modifier": "{0}つの空のまたはクラフトされたモッド",
     "has_empty_affix": "任意",
     "has_empty_prefix": "プレフィックス",
     "has_empty_suffix": "サフィックス",
     "item_level": "アイテムレベル: {0}",
+    "requires_level": "装備条件 レベル: {0}",
     "stock": "在庫: {0}",
     "map_tier": "マップティア: {0}",
     "area_level": "エリアレベル: {0}",
@@ -66,10 +67,12 @@
     "quality": "品質: {0}",
     "gem_level": "レベル: {0}",
     "gem_sockets": "ソケット: {0}",
-    "rune_sockets": "ソケット: {0}",
+    "augment_sockets": "ソケット: {0}",
     "sentinel_charge": "チャージ: {0}",
     "find_in_stash": "スタッシュで見つける",
-    "find_same_price": "Filter by Price",
+    "find_same_price": "Filter by",
+    "find_same_price_type": "Filter by:",
+    "price": "Price Only",
     "parse_error": "アイテムの解析中にエラーが発生しました",
     "parse_error_help": "これはおそらくバグであり、GitHubで報告できます。",
     "unknown": "不明なアイテム",
@@ -88,6 +91,7 @@
     "mod_explicit": "明示",
     "mod_crafted": "クラフト",
     "mod_scourge": "スカージ",
+    "mod_rune": "オーグメント",
     "unidentified": "未鑑定",
     "veiled": "ヴェール",
     "foil_unique": "フォイルユニーク",
@@ -100,7 +104,15 @@
     "has_elemental_fire_affix": "Fire",
     "has_elemental_cold_affix": "Cold",
     "has_elemental_lightning_affix": "Lightning",
-    "rarity_magic": "レアリティ: マジック"
+    "rarity_magic": "レアリティ: マジック",
+    "map_revives": "復活が利用可能: {0}",
+    "map_pack_size": "モンスターパックサイズ: +{0}%",
+    "map_magic_monsters": "マジックモンスター: +{0}%",
+    "map_rare_monsters": "レアモンスター: +{0}%",
+    "map_drop_chance": "ウェイストーンドロップ確率: +{0}%",
+    "map_item_rarity": "アイテムレアリティ: +{0}%",
+    "map_gold": "見つかるゴールド: +{0}%",
+    "uses_remaining": "残り{0}回の使用可能"
   },
   "item_category": {
     "prop": "カテゴリー: {0}",
@@ -147,12 +159,14 @@
     "weapon_spear": "槍",
     "weapon_flail": "フレイル",
     "armour_buckler": "バックラー",
-    "map_tablet": "Tablet"
+    "map_tablet": "Tablet",
+    "weapon_talisman": "タリスマン"
   },
   "filters": {
     "selected_some": "スタット {1}つの内{0}",
     "selected_none": "スタット無視",
     "hidden_toggle": "非表示",
+    "hidden_explicit_toggle": "明示",
     "collapse": "折りたたむ",
     "mods_toggle": "モッズ",
     "empty": "関連するスタットが見つかりませんでした",
@@ -169,6 +183,8 @@
     "hide_empty_mod": "アイテムに6つの修飾子（そのうち1つはクラフト済み）または5つの修飾子がある場合のみ選択",
     "hide_low_ilvl": "Item has too low an item level to roll all mods",
     "hide_not_max_level": "Non max level granted skills rarely add value",
+    "hide_for_map": "Most map modifiers have no value",
+    "hide_revives": "Select only if not 0 and don't want to exalt it?",
     "tag_implicit": "暗黙",
     "tag_fractured": "フラクチャー",
     "tag_crafted": "クラフト",
@@ -189,11 +205,12 @@
     "tag_explicit_delve": "デルヴ",
     "tag_explicit_veiled": "ヴェール",
     "tag_explicit_incursion": "インカージョン",
-    "tag_rune": "ルーン",
-    "tag_added_rune": "ルーン",
+    "tag_rune": "オーグメント",
+    "tag_added_rune": "オーグメント",
     "tag_sanctum": "Sanctum",
     "tag_desecrated": "冒涜",
     "tag_skill": "Skill",
+    "tag_mutated": "Mutated",
     "fill_rune_iron": "Fill Runes(Iron)",
     "grade": "グレード {0}",
     "hybrid_note": "Tier may be incorrect due to the potential for a hybrid mod"
@@ -328,7 +345,8 @@
     "stack": "スタック",
     "fix_complex_query": "設定で\"Use pseudo mods\"を無効にするか、組み込みブラウザでログインしてください",
     "likely_price_fixed": "Mostly non-standard currency: ",
-    "filter_exalt_divine": "Filter by Exalt/Divine"
+    "filter_exalt_divine": "Filter by Exalt/Divine",
+    "highest_volume": "Highest volume:"
   },
   "settings": {
     "title": "設定 - Exiled Exchange 2",
@@ -370,7 +388,9 @@
     "tip_frequency_5": "ごく稀に",
     "tip_frequency_6": "表示しない",
     "tips_header": "すべてのヒントを切り替え：",
-    "tip_number_header": "ヒント #{0}"
+    "tip_number_header": "ヒント #{0}",
+    "read_client_log": "Allow reading of Client.txt file",
+    "client_log_explain": "Client.txt log file contains debugging info and chat logs. This is used to detect zone changes and player level ups."
   },
   "price_check": {
     "name": "価格チェック",
@@ -402,7 +422,9 @@
     "tier_numbering_help": "ゲーム内の命名規則との衝突による混乱を減らすため、PoE1のティアは\"Tier\"ではなく\"Grade\"という名称を使用します。",
     "always_show_tier": "Always show tier",
     "remember_ratio": "Remember currency ratio",
-    "open_editor_above": "Open rune socket selector upwards"
+    "open_editor_above": "Open rune socket selector upwards",
+    "core_currency": "Primary base currency:",
+    "show_volume": "Show Currency Exchange volume per hour:"
   },
   "poe2_new": {
     "beta_warning": "これはPOE2のベータ版です、期待通りに動作しないことがあります。",
@@ -445,5 +467,15 @@
     "tip_28": "設定でリーグを変更できます",
     "tip_29": "設定でカスタムチャットコマンドのホットキーを追加できます",
     "tip_30": "Exiled Exchange 1のことは話しません"
+  },
+  "leveling": {
+    "name": "Leveling",
+    "enable_read_client_logs": "Leveling widgets require allowing reading of client logs",
+    "exp_tracking": "Experience Tracker",
+    "show_exp": "Show experience gain percentage",
+    "exp_tracking_help_tldr": "TLDR: try to keep 'Over' at 0 or 1",
+    "exp_tracking_help": "XP tracking widget shows your current level, current experience multiplier, and how close you are to being under-leveled. XP penalty is applied immediately if you are over-leveled, and when you are under-leveled by \u230A level/16 + 3 \u230B. The 'Over' is how many levels the your current level is over the bottom of the 'safe zone', generally 0 or 1 means you are killing the highest level monsters you can without incurring the under-leveled penalty",
+    "exp_inspire": "Based on ",
+    "exp_astrict": "*Experience gain percentages, when over level 95, or monster level over 70, or potentially when not at 100% exp gain, may not be fully tested and accurate."
   }
 }

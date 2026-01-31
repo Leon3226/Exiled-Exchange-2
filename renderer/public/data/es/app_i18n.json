@@ -52,11 +52,12 @@
     "aps": "Ataques por segundo: {0}",
     "spirit": "Espíritu: {0}",
     "reload_time": "Tiempo de recarga: {0}",
-    "has_empty_modifier": "1 modificador vacío o fabricado",
+    "has_empty_modifier": "{0} modificador vacío o fabricado",
     "has_empty_affix": "Cualquiera",
     "has_empty_prefix": "Prefijo",
     "has_empty_suffix": "Sufijo",
     "item_level": "Nivel del objeto: {0}",
+    "requires_level": "Requiere Nivel: {0}",
     "stock": "Inventario: {0}",
     "map_tier": "Nivel del mapa: {0}",
     "area_level": "Nivel del área: {0}",
@@ -66,10 +67,12 @@
     "quality": "Calidad: {0}",
     "gem_level": "Nivel: {0}",
     "gem_sockets": "Ranuras: {0}",
-    "rune_sockets": "Ranuras: {0}",
+    "augment_sockets": "Ranuras: {0}",
     "sentinel_charge": "Carga: {0}",
     "find_in_stash": "Encontrar en el alijo",
-    "find_same_price": "Filter by Price",
+    "find_same_price": "Filter by",
+    "find_same_price_type": "Filter by:",
+    "price": "Price Only",
     "parse_error": "Se produjo un error al analizar el objeto",
     "parse_error_help": "Esto probablemente sea un error. Puedes informarlo en GitHub.",
     "unknown": "Objeto desconocido",
@@ -88,6 +91,7 @@
     "mod_explicit": "Explícito",
     "mod_crafted": "Fabricado",
     "mod_scourge": "Calamidad",
+    "mod_rune": "mejora",
     "unidentified": "No identificado",
     "veiled": "Velado",
     "foil_unique": "Único Brillante",
@@ -100,7 +104,15 @@
     "has_elemental_fire_affix": "Fire",
     "has_elemental_cold_affix": "Cold",
     "has_elemental_lightning_affix": "Lightning",
-    "rarity_magic": "Rareza: Mágico"
+    "rarity_magic": "Rareza: Mágico",
+    "map_revives": "Resurrecciones disponibles: {0}",
+    "map_pack_size": "Tamaño de los grupos de monstruos: +{0}%",
+    "map_magic_monsters": "Monstruos mágicos: +{0}%",
+    "map_rare_monsters": "Monstruos raros: +{0}%",
+    "map_drop_chance": "Probabilidad de botín de piedra guía: +{0}%",
+    "map_item_rarity": "Rareza de objetos: +{0}%",
+    "map_gold": "Oro encontrado: +{0}%",
+    "uses_remaining": "Quedan usos: {0}"
   },
   "item_category": {
     "prop": "Categoría: {0}",
@@ -148,7 +160,8 @@
     "weapon_spear": "Lanza",
     "weapon_flail": "Mangual",
     "armour_buckler": "Broquel",
-    "map_tablet": "Tablet"
+    "map_tablet": "Tablet",
+    "weapon_talisman": "Talismán"
   },
   "filters": {
     "selected_some": "{0} de {1}, estadísticas",
@@ -157,6 +170,7 @@
     "selected_full_runes": "Runas llenas",
     "empty_rune_socket": "Vacio en el Casillero de Runas",
     "hidden_toggle": "Oculto",
+    "hidden_explicit_toggle": "explícito",
     "collapse": "Colapsar",
     "mods_toggle": "Modificadores",
     "empty": "No se encontraron estadísticas relevantes",
@@ -173,6 +187,8 @@
     "hide_empty_mod": "Seleccionar solo si el objeto tiene 6 modificadores (1 de los cuales es elaborado) o si tiene 5 modificadores",
     "hide_low_ilvl": "Item has too low an item level to roll all mods",
     "hide_not_max_level": "Non max level granted skills rarely add value",
+    "hide_for_map": "Most map modifiers have no value",
+    "hide_revives": "Select only if not 0 and don't want to exalt it?",
     "tag_implicit": "implícito",
     "tag_fractured": "fracturado",
     "tag_crafted": "elaborado",
@@ -193,11 +209,12 @@
     "tag_explicit_delve": "Excursión",
     "tag_explicit_veiled": "Velado",
     "tag_explicit_incursion": "Incursión",
-    "tag_rune": "Runa",
-    "tag_added_rune": "Runa",
+    "tag_rune": "mejora",
+    "tag_added_rune": "mejora",
     "tag_sanctum": "Sanctum",
     "tag_desecrated": "profanado",
     "tag_skill": "Skill",
+    "tag_mutated": "Mutated",
     "fill_rune_iron": "Fill Runes(Iron)",
     "grade": "Grade {0}",
     "hybrid_note": "Tier may be incorrect due to the potential for a hybrid mod"
@@ -337,7 +354,8 @@
     "results_warn_message": "El sitio de comercio oculta resultados entre {0} y {1} ex",
     "fix_complex_query": "Disable \"Use pseudo mods\" in settings or log in with builtin browser",
     "likely_price_fixed": "Mostly non-standard currency: ",
-    "filter_exalt_divine": "Filter by Exalt/Divine"
+    "filter_exalt_divine": "Filter by Exalt/Divine",
+    "highest_volume": "Highest volume:"
   },
   "settings": {
     "title": "Configuración - Exiled Exchange 2",
@@ -379,7 +397,9 @@
     "tip_frequency_2": "Normal",
     "tip_frequency_3": "Rarely",
     "tip_frequency_4": "Very Rarely",
-    "tip_frequency_5": "Never"
+    "tip_frequency_5": "Never",
+    "read_client_log": "Allow reading of Client.txt file",
+    "client_log_explain": "Client.txt log file contains debugging info and chat logs. This is used to detect zone changes and player level ups."
   },
   "price_check": {
     "name": "Comprobación de precios",
@@ -415,7 +435,9 @@
     "tier_numbering_help": "To try to reduce confusion due to conflicting naming conventions with the game, PoE1 tiers will use the name \"Grade\" instead of \"Tier\". ",
     "always_show_tier": "Always show tier",
     "remember_ratio": "Remember currency ratio",
-    "open_editor_above": "Open rune socket selector upwards"
+    "open_editor_above": "Open rune socket selector upwards",
+    "core_currency": "Primary base currency:",
+    "show_volume": "Show Currency Exchange volume per hour:"
   },
   "poe2_new": {
     "beta_warning": "Esto está en BETA para POE2, las cosas no siempre funcionarán como se espera.",
@@ -457,5 +479,15 @@
     "tip_28": "You can change your league in the settings",
     "tip_29": "You can add custom chat command hotkeys in the settings",
     "tip_30": "We don't talk about Exiled Exchange 1"
+  },
+  "leveling": {
+    "name": "Leveling",
+    "enable_read_client_logs": "Leveling widgets require allowing reading of client logs",
+    "exp_tracking": "Experience Tracker",
+    "show_exp": "Show experience gain percentage",
+    "exp_tracking_help_tldr": "TLDR: try to keep 'Over' at 0 or 1",
+    "exp_tracking_help": "XP tracking widget shows your current level, current experience multiplier, and how close you are to being under-leveled. XP penalty is applied immediately if you are over-leveled, and when you are under-leveled by \u230A level/16 + 3 \u230B. The 'Over' is how many levels the your current level is over the bottom of the 'safe zone', generally 0 or 1 means you are killing the highest level monsters you can without incurring the under-leveled penalty",
+    "exp_inspire": "Based on ",
+    "exp_astrict": "*Experience gain percentages, when over level 95, or monster level over 70, or potentially when not at 100% exp gain, may not be fully tested and accurate."
   }
 }

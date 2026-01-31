@@ -18,5 +18,11 @@ import { Host } from "./web/background/IPC";
     },
   );
 
-  createApp(App).use(i18nPlugin).mount("#app");
+  const app = createApp(App);
+  app.use(i18nPlugin);
+  app.mount("#app");
+  if (import.meta.env.DEV) {
+    app.config.performance = true;
+    console.error("DEV MODE");
+  }
 })();

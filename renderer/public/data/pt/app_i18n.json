@@ -51,11 +51,12 @@
     "aps": "Ataques por segundo: {0}",
     "spirit": "Espírito: {0}",
     "reload_time": "Tempo de Recarregamento: {0}",
-    "has_empty_modifier": "1 modificador vazio ou fabricado",
+    "has_empty_modifier": "{0} modificador vazio ou fabricado",
     "has_empty_affix": "Qualquer",
     "has_empty_prefix": "Prefixo",
     "has_empty_suffix": "Sufixo",
     "item_level": "Nível do item: {0}",
+    "requires_level": "Requer Nível: {0}",
     "stock": "Inventário: {0}",
     "map_tier": "Nível do mapa: {0}",
     "area_level": "Nível da área: {0}",
@@ -65,10 +66,12 @@
     "quality": "Qualidade: {0}",
     "gem_level": "Nível: {0}",
     "gem_sockets": "Engastes: {0}",
-    "rune_sockets": "Engastes: {0}",
+    "augment_sockets": "Engastes: {0}",
     "sentinel_charge": "Carga: {0}",
     "find_in_stash": "Encontrar no baú",
-    "find_same_price": "Filter by Price",
+    "find_same_price": "Filter by",
+    "find_same_price_type": "Filter by:",
+    "price": "Price Only",
     "parse_error": "Ocorreu um erro ao analisar o item",
     "parse_error_help": "Isso provavelmente é um erro. Você pode reportá-lo no GitHub.",
     "unknown": "Item desconhecido",
@@ -87,6 +90,7 @@
     "mod_explicit": "Explícito",
     "mod_crafted": "Fabricado",
     "mod_scourge": "Flagelo",
+    "mod_rune": "aprimoramento",
     "unidentified": "Não identificado",
     "veiled": "Velado",
     "foil_unique": "Único Brilhante",
@@ -94,7 +98,15 @@
     "not_mirrored": "Não espelhado",
     "sanctified": "Santificado",
     "not_sanctified": "Não Santificado",
-    "rarity_magic": "Raridade: Mágico"
+    "rarity_magic": "Raridade: Mágico",
+    "map_revives": "Ressurreições: {0}",
+    "map_pack_size": "Tamanho do Grupo de Monstros: +{0}%",
+    "map_magic_monsters": "Monstros Mágicos: +{0}%",
+    "map_rare_monsters": "Monstros Raros: +{0}%",
+    "map_drop_chance": "Chance de Queda de Pedra Guia: +{0}%",
+    "map_item_rarity": "Raridade de Itens: +{0}%",
+    "map_gold": "Ouro Encontrado: +{0}%",
+    "uses_remaining": "utilizações restantes: {0}"
   },
   "item_category": {
     "prop": "Categoria: {0}",
@@ -142,7 +154,8 @@
     "weapon_spear": "Lança",
     "weapon_flail": "Mangual",
     "armour_buckler": "Broquel",
-    "map_tablet": "Tablet"
+    "map_tablet": "Tablet",
+    "weapon_talisman": "Talismã"
   },
   "filters": {
     "selected_some": "{0} de {1}, estatísticas",
@@ -151,6 +164,7 @@
     "selected_full_runes": "Runas completas",
     "empty_rune_socket": "Vazio no Engaste de Runas",
     "hidden_toggle": "Oculto",
+    "hidden_explicit_toggle": "explícito",
     "collapse": "Colapsar",
     "mods_toggle": "Modificadores",
     "empty": "Nenhuma estatística relevante encontrada",
@@ -167,6 +181,8 @@
     "hide_empty_mod": "Selecionar apenas se o item tiver 6 modificadores (1 dos quais fabricado) ou se tiver 5 modificadores",
     "hide_low_ilvl": "Item has too low an item level to roll all mods",
     "hide_not_max_level": "Non max level granted skills rarely add value",
+    "hide_for_map": "Most map modifiers have no value",
+    "hide_revives": "Select only if not 0 and don't want to exalt it?",
     "tag_implicit": "implícito",
     "tag_fractured": "fraturado",
     "tag_crafts": "fabricado",
@@ -187,8 +203,10 @@
     "tag_explicit_delve": "Exploração",
     "tag_explicit_veiled": "Velado",
     "tag_explicit_incursion": "Incursão",
-    "tag_rune": "Runa",
-    "tag_desecrated": "Profanado"
+    "tag_rune": "aprimoramento",
+    "tag_desecrated": "Profanado",
+    "tag_mutated": "Mutated",
+    "tag_skill": "Skill"
   },
   "online_filter": {
     "offline_toggle": "Desconectado & Online",
@@ -324,7 +342,8 @@
     "results_warn_title": "Preço provavelmente muito alto",
     "results_warn_message": "O site de comércio oculta resultados entre {0} e {1} ex",
     "likely_price_fixed": "Mostly non-standard currency: ",
-    "filter_exalt_divine": "Filter by Exalt/Divine"
+    "filter_exalt_divine": "Filter by Exalt/Divine",
+    "highest_volume": "Highest volume:"
   },
   "settings": {
     "title": "Configurações - Exiled Exchange 2",
@@ -358,7 +377,9 @@
     "debug_hotkeys": "Registrar todas as teclas pressionadas",
     "preferred_trade_site": "Site de comércio preferido",
     "enable_alphas": "Habilitar alfas",
-    "alphas_warning": "As alfas são extremamente experimentais e provavelmente não funcionarão como esperado. Por favor, reporte qualquer problema que encontrar."
+    "alphas_warning": "As alfas são extremamente experimentais e provavelmente não funcionarão como esperado. Por favor, reporte qualquer problema que encontrar.",
+    "read_client_log": "Allow reading of Client.txt file",
+    "client_log_explain": "Client.txt log file contains debugging info and chat logs. This is used to detect zone changes and player level ups."
   },
   "price_check": {
     "name": "Verificação de preços",
@@ -394,5 +415,15 @@
     "parse_error2": "Provavelmente possui um modificador que ainda não é compatível.",
     "parse_error3": "(Possivelmente um novo termo ou palavra modificada do poe1)",
     "bulk_exchange": "As taxas de troca em lote ainda não foram implementadas"
+  },
+  "leveling": {
+    "name": "Leveling",
+    "enable_read_client_logs": "Leveling widgets require allowing reading of client logs",
+    "exp_tracking": "Experience Tracker",
+    "show_exp": "Show experience gain percentage",
+    "exp_tracking_help_tldr": "TLDR: try to keep 'Over' at 0 or 1",
+    "exp_tracking_help": "XP tracking widget shows your current level, current experience multiplier, and how close you are to being under-leveled. XP penalty is applied immediately if you are over-leveled, and when you are under-leveled by \u230A level/16 + 3 \u230B. The 'Over' is how many levels the your current level is over the bottom of the 'safe zone', generally 0 or 1 means you are killing the highest level monsters you can without incurring the under-leveled penalty",
+    "exp_inspire": "Based on ",
+    "exp_astrict": "*Experience gain percentages, when over level 95, or monster level over 70, or potentially when not at 100% exp gain, may not be fully tested and accurate."
   }
 }

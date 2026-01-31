@@ -5,6 +5,7 @@ import {
   INTERNAL_TRADE_IDS,
   InternalTradeId,
   ItemIsElementalModifier,
+  FilterTag,
 } from "../filters/interfaces";
 import { setProperty as propSet } from "dot-prop";
 import { DateTime } from "luxon";
@@ -22,7 +23,12 @@ import { RateLimiter } from "./RateLimiter";
 import { ModifierType } from "@/parser/modifiers";
 import { Cache } from "./Cache";
 import { parseAffixStrings } from "@/parser/Parser";
-import { displayRounding, usePoeninja } from "@/web/background/Prices";
+import {
+  CoreCurrency,
+  displayRounding,
+  DivCurrency,
+  usePoeninja,
+} from "@/web/background/Prices";
 import { getCurrencyDetailsId } from "../trends/getDetailsId";
 
 export const CATEGORY_TO_TRADE_ID = new Map([
@@ -75,6 +81,8 @@ export const CATEGORY_TO_TRADE_ID = new Map([
   [ItemCategory.Buckler, "armour.buckler"],
   [ItemCategory.Tablet, "map.tablet"],
   [ItemCategory.MapFragment, "map.fragment"],
+  [ItemCategory.Talisman, "weapon.talisman"],
+  [ItemCategory.Waystone, "map.waystone"],
 ]);
 
 const TOTAL_MODS_TEXT = {
@@ -107,6 +115,16 @@ const CONVERT_CURRENCY: Record<string, string> = {
   "greater-exalted-orb": "G. exalted",
   "perfect-exalted-orb": "P. exalted",
 };
+
+const TABLET_USES_STATS = [
+  "Adds Irradiated to a Map \n# use remaining",
+  "Adds Ritual Altars to a Map \n# use remaining",
+  "Adds a Kalguuran Expedition to a Map \n# use remaining",
+  "Adds a Mirror of Delirium to a Map \n# use remaining",
+  "Adds an Otherworldy Breach to a Map \n# use remaining",
+  "Empowers the Map Boss of a Map \n# use remaining",
+  "Adds Abysses to a Map \n# use remaining",
+];
 
 interface FilterBoolean {
   option?: "true" | "false";
@@ -171,7 +189,7 @@ interface TradeRequest {
           ev?: FilterRange;
           // Physical Damage per Second
           pdps?: FilterRange;
-          // Rune Slots
+          // Augment Slots (still called rune on trade site)
           rune_sockets?: FilterRange;
           // Spirit
           spirit?: FilterRange;
@@ -187,11 +205,15 @@ interface TradeRequest {
           str?: FilterRange;
         };
       };
-      // WILL PROBABLY BE REMOVED SOON
       map_filters?: {
         filters: {
-          map_bonus?: FilterRange;
           map_tier?: FilterRange;
+          map_revives?: FilterRange;
+          map_packsize?: FilterRange;
+          map_magic_monsters?: FilterRange;
+          map_rare_monsters?: FilterRange;
+          map_bonus?: FilterRange;
+          map_iir?: FilterRange;
         };
       };
       misc_filters?: {
@@ -260,6 +282,7 @@ interface FetchResult {
     };
     pseudoMods?: string[];
     desecratedMods?: string[];
+    fracturedMods?: string[];
   };
   listing: {
     indexed: string;
@@ -296,8 +319,8 @@ export interface PricingResult {
   priceAmount: number;
   priceCurrency: string;
   priceCurrencyRank?: number;
-  normalizedPrice: string;
-  normalizedPriceCurrency: string;
+  normalizedPrice?: string;
+  normalizedPriceCurrency?: CoreCurrency;
   isMine: boolean;
   hasNote: boolean;
   isInstantBuyout: boolean;
@@ -314,6 +337,13 @@ export function createTradeRequest(
   stats: StatFilter[],
   item: ParsedItem,
 ) {
+  if (filters.trade.listingType === "onlineleague") {
+    console.error(
+      "onlineleague is not supported for trade, you shouldn't ever see this",
+    );
+    filters.trade.listingType = "securable";
+  }
+
   const body: TradeRequest = {
     query: {
       status: {
@@ -405,6 +435,18 @@ export function createTradeRequest(
     }
   }
 
+  if (
+    filters.requires &&
+    filters.requires.level &&
+    !filters.requires.level.disabled
+  ) {
+    propSet(
+      query.filters,
+      "req_filters.filters.lvl.max",
+      filters.requires.level.value,
+    );
+  }
+
   if (filters.quality && !filters.quality.disabled) {
     propSet(
       query.filters,
@@ -415,11 +457,11 @@ export function createTradeRequest(
 
   // EQUIPMENT FILTERS
 
-  if (filters.runeSockets && !filters.runeSockets.disabled) {
+  if (filters.augmentSockets && !filters.augmentSockets.disabled) {
     propSet(
       query.filters,
       "equipment_filters.filters.rune_sockets.min",
-      filters.runeSockets.value,
+      filters.augmentSockets.value,
     );
   }
 
@@ -492,6 +534,14 @@ export function createTradeRequest(
     );
   }
 
+  if (filters.fractured?.value === false) {
+    propSet(
+      query.filters,
+      "misc_filters.filters.fractured_item.option",
+      String(false),
+    );
+  }
+
   if (filters.mirrored) {
     if (filters.mirrored.disabled) {
       propSet(
@@ -535,6 +585,23 @@ export function createTradeRequest(
     );
   }
 
+  // Custom fake pseudo filter for uses remaining
+  if (filters.usesRemaining) {
+    query.stats.push({
+      type: "count",
+      value: { min: 1 },
+      disabled: filters.usesRemaining.disabled,
+      filters: TABLET_USES_STATS.map((ref) => {
+        const stat = STAT_BY_REF(ref)!;
+        return {
+          id: stat.trade.ids[ModifierType.Implicit][0],
+          value: { min: filters.usesRemaining!.value },
+          disabled: false,
+        };
+      }),
+    });
+  }
+
   // TRADE FILTERS
 
   // BREAK ==============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
@@ -547,7 +614,7 @@ export function createTradeRequest(
           TOTAL_MODS_TEXT.EMPTY_MODIFIERS[stat.option!.value],
         )!.trade.ids[ModifierType.Pseudo][0],
       };
-
+      const emptyRoll = stat.roll!;
       query.stats.push({
         type: "count",
         value: { min: 1, max: 1 },
@@ -555,7 +622,7 @@ export function createTradeRequest(
         filters: [
           {
             id: TARGET_ID.EMPTY_MODIFIERS,
-            value: { min: 1, max: 1 },
+            value: { ...getMinMax(emptyRoll) },
             disabled: stat.disabled,
           },
         ],
@@ -769,15 +836,61 @@ export function createTradeRequest(
       case "item.rarity_magic":
         propSet(query.filters, "type_filters.filters.rarity.option", "magic");
         break;
+      case "item.map_revives":
+        propSet(
+          query.filters,
+          "map_filters.filters.map_revives.min",
+          typeof input.min === "number" ? input.min : undefined,
+        );
+        break;
+      case "item.map_pack_size":
+        propSet(
+          query.filters,
+          "map_filters.filters.map_packsize.min",
+          typeof input.min === "number" ? input.min : undefined,
+        );
+        break;
+      case "item.map_magic_monsters":
+        propSet(
+          query.filters,
+          "map_filters.filters.map_magic_monsters.min",
+          typeof input.min === "number" ? input.min : undefined,
+        );
+        break;
+      case "item.map_rare_monsters":
+        propSet(
+          query.filters,
+          "map_filters.filters.map_rare_monsters.min",
+          typeof input.min === "number" ? input.min : undefined,
+        );
+        break;
+      case "item.map_drop_chance":
+        propSet(
+          query.filters,
+          "map_filters.filters.map_bonus.min",
+          typeof input.min === "number" ? input.min : undefined,
+        );
+        break;
+      case "item.map_item_rarity":
+        propSet(
+          query.filters,
+          "map_filters.filters.map_iir.min",
+          typeof input.min === "number" ? input.min : undefined,
+        );
+        break;
+      case "item.map_gold":
+        propSet(
+          query.filters,
+          "map_filters.filters.map_gold.min",
+          typeof input.min === "number" ? input.min : undefined,
+        );
+        break;
     }
   }
 
   stats = stats.filter(
     (stat) => !INTERNAL_TRADE_IDS.includes(stat.tradeId[0] as any),
   );
-  if (filters.veiled && !filters.veiled.disabled) {
-    propSet(query.filters, "misc_filters.filters.veiled.option", String(true));
-  }
 
   // if (filters.influences) {
   //   for (const influence of filters.influences) {
@@ -826,6 +939,31 @@ export function createTradeRequest(
         filters: stat.tradeId.map((id) => tradeIdToQuery(id, stat)),
       });
     }
+  }
+
+  if (filters.veiled && !filters.veiled.disabled) {
+    propSet(query.filters, "misc_filters.filters.veiled.option", String(true));
+    const veiledCount = filters.veiled.veiledCount;
+
+    // HACK: add pseudo stat for veiled count(dont want on my ui though)
+    qAnd.filters.push(
+      tradeIdToQuery("pseudo.pseudo_number_of_unrevealed_mods", {
+        tradeId: ["pseudo.pseudo_number_of_unrevealed_mods"],
+        statRef: "# Unrevealed Modifiers",
+        text: "Unrevealed Modifiers",
+        tag: FilterTag.Pseudo,
+        sources: [],
+        roll: {
+          value: veiledCount,
+          min: veiledCount,
+          max: undefined,
+          default: { min: veiledCount, max: veiledCount },
+          dp: false,
+          isNegated: false,
+        },
+        disabled: false,
+      }),
+    );
   }
 
   return body;
@@ -882,8 +1020,11 @@ export async function requestResults(
   resultIds: string[],
   opts: { accountName: string },
 ): Promise<PricingResult[]> {
+  const { cachedCurrencyByQuery, xchgRateCurrency } = usePoeninja();
+  // Solves cached results showing random incorrect values
+  cache.purgeIfDifferentCurrency(xchgRateCurrency.value?.id);
+
   let data = cache.get<FetchResult[]>(resultIds);
-  const { cachedCurrencyByQuery } = usePoeninja();
 
   if (!data) {
     await RateLimiter.waitMulti(RATE_LIMIT_RULES.FETCH);
@@ -923,6 +1064,9 @@ export async function requestResults(
     const desecratedMods = result.item.desecratedMods?.map((s) =>
       parseAffixStrings(s),
     );
+    const fracturedMods = result.item.fracturedMods?.map((s) =>
+      parseAffixStrings(s),
+    );
     const pseudoMods = result.item.pseudoMods?.map((s) => {
       if (s.startsWith("Sum: ")) {
         const pseudoRes = +s.slice(5);
@@ -959,7 +1103,9 @@ export async function requestResults(
       runeMods,
       implicitMods,
       // HACK: fix the implementation at some point
-      explicitMods: (explicitMods ?? []).concat(desecratedMods ?? []),
+      explicitMods: (fracturedMods ?? [])
+        .concat(explicitMods ?? [])
+        .concat(desecratedMods ?? []),
       enchantMods,
       pseudoMods,
       extended,
@@ -982,22 +1128,18 @@ export async function requestResults(
     const query = getCurrencyDetailsId(
       result.listing.price?.currency ?? "no price",
     );
-    const normalizedCurrency =
-      result.listing.price?.currency === "exalted"
-        ? // exalts aren't in db since they are the stable currency
-          {
-            min: result.listing.price.amount,
-            max: result.listing.price.amount,
-            currency: "exalted",
-          }
-        : // otherwise convert to stable
-          (cachedCurrencyByQuery(query, result.listing.price?.amount ?? 0) ?? {
-            min: 0,
-            max: 0,
-            currency: "exalted",
-          });
-    const normalizedPrice = displayRounding(normalizedCurrency.min);
-    const normalizedPriceCurrency = normalizedCurrency.currency;
+    const normalizedCurrency = cachedCurrencyByQuery(
+      query,
+      result.listing.price?.amount ?? 0,
+    );
+    const normalizedPrice =
+      normalizedCurrency !== undefined
+        ? displayRounding(normalizedCurrency.min)
+        : undefined;
+    const normalizedPriceCurrency =
+      normalizedCurrency?.currency !== "div"
+        ? xchgRateCurrency.value
+        : DivCurrency;
 
     return {
       id: result.id,

@@ -6,6 +6,7 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-yaml
     -   id: check-added-large-files
+        args: ['--maxkb=1024']
 -   repo: local
     hooks:
     -   id: check-version-consistency
@@ -38,6 +39,20 @@ repos:
     -   id: format-renderer
         name: Format Renderer Project
         entry: npm run format --prefix ./renderer
+        language: system
+        pass_filenames: false
+        files: ^renderer/.*\.(ts|js|jsx|tsx|vue|json|md)$
+
+    -   id: type-check-main
+        name: Type Check Main Project
+        entry: npm run check-types --prefix ./main
+        language: system
+        pass_filenames: false
+        files: ^main/.*\.(ts|js|jsx|tsx|vue|json|md)$
+
+    -   id: type-check-renderer
+        name: Type Check Renderer Project
+        entry: npm run check-types --prefix ./renderer
         language: system
         pass_filenames: false
         files: ^renderer/.*\.(ts|js|jsx|tsx|vue|json|md)$
