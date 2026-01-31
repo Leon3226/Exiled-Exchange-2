@@ -194,7 +194,7 @@ import UiCheckbox from "@/web/ui/UiCheckbox.vue";
 import UiToggle from "@/web/ui/UiToggle.vue";
 import UiErrorBox from "@/web/ui/UiErrorBox.vue";
 import { configModelValue, configProp, findWidget } from "../settings/utils.js";
-import type { PriceCheckWidget } from "@/web/overlay/interfaces";
+import type { PriceCheckWidget, PriceCheckInstantWidget } from "@/web/overlay/interfaces";
 import { useLeagues } from "../background/Leagues";
 import { getRuneNameByRef } from "./filters/fill-runes.js";
 
@@ -206,6 +206,10 @@ export default defineComponent({
     const configWidget = computed(
       () => findWidget<PriceCheckWidget>("price-check", props.config)!,
     );
+    const configWidgetInstant = computed(
+      () => findWidget<PriceCheckInstantWidget>("price-check-instant", props.config)!,
+    );
+
 
     const leagues = useLeagues();
     const { t } = useI18nNs("price_check");
@@ -249,6 +253,8 @@ export default defineComponent({
           : null,
       ),
       hotkeyLocked: computed(() => configWidget.value.hotkeyLocked),
+      hotkeyInstant: computed(() => configWidgetInstant.value.hotkeyInstant),
+      hotkeyInstantLocked: computed(() => configWidgetInstant.value.hotkeyInstantLocked),
       smartInitialSearch: configModelValue(
         () => configWidget.value,
         "smartInitialSearch",

@@ -47,6 +47,18 @@
           }}</label>
           <hotkey-input v-model="priceCheckHotkeyLocked" class="w-48" />
         </div>
+        <div class="flex gap-x-2">
+          <label class="flex-1 text-gray-500">{{
+            t("price_check.hotkey_locked")
+          }}</label>
+          <hotkey-input v-model="priceCheckHotkeyInstant" class="w-48" />
+        </div>
+        <div class="flex gap-x-2">
+          <label class="flex-1 text-gray-500">{{
+            t("price_check.hotkey_locked")
+          }}</label>
+          <hotkey-input v-model="priceCheckHotkeyInstantLocked" class="w-48" />
+        </div>
       </div>
     </div>
     <div class="mb-4 flex">
@@ -87,7 +99,7 @@ import { defineComponent } from "vue";
 import { useI18n } from "vue-i18n";
 import UiRadio from "@/web/ui/UiRadio.vue";
 import { configProp, configModelValue, findWidget } from "./utils";
-import { PriceCheckWidget, DelveGridWidget } from "@/web/overlay/interfaces";
+import { PriceCheckWidget, DelveGridWidget, PriceCheckInstantWidget } from "@/web/overlay/interfaces";
 import { ItemCheckWidget } from "../item-check/widget.js";
 import HotkeyInput from "./HotkeyInput.vue";
 
@@ -121,6 +133,14 @@ export default defineComponent({
       priceCheckHotkeyLocked: configModelValue(
         () => findWidget<PriceCheckWidget>("price-check", props.config)!,
         "hotkeyLocked",
+      ),
+      priceCheckHotkeyInstant: configModelValue(
+        () => findWidget<PriceCheckInstantWidget>("price-check-instant", props.config)!,
+        "hotkeyInstant",
+      ),
+      priceCheckHotkeyInstantLocked: configModelValue(
+        () => findWidget<PriceCheckInstantWidget>("price-check-instant", props.config)!,
+        "hotkeyInstantLocked",
       ),
     };
   },

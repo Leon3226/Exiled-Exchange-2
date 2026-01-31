@@ -58,6 +58,11 @@ export interface PriceCheckWidget extends Widget {
   openItemEditorAbove: boolean;
 }
 
+export interface PriceCheckInstantWidget extends Widget {
+  hotkeyInstant: string | null;
+  hotkeyInstantLocked: string | null;
+}
+
 export interface StopwatchWidget extends Widget {
   anchor: Anchor;
   toggleKey: string | null;

@@ -1,8 +1,10 @@
 import fnv1a from "@sindresorhus/fnv1a";
 import type {
   BaseType,
+  CatboostModelCollection,
   DropEntry,
   ItemCategoryToEmptyPrefix,
+  ItemTypeVectorDataCollection,
   RuneDataByRune,
   RuneDataByTradeId,
   RuneSingleValue,
@@ -22,6 +24,8 @@ export let RUNE_SINGLE_VALUE: RuneSingleValue;
 export let RUNE_DATA_BY_RUNE: RuneDataByRune;
 export let RUNE_DATA_BY_TRADE_ID: RuneDataByTradeId;
 export let ITEM_CATEGORY_TO_EMPTY_PREFIX: ItemCategoryToEmptyPrefix;
+export let ITEM_VECTOR_DATA: ItemTypeVectorDataCollection;
+export let GRADIENT_BOOSTING_MODELS: CatboostModelCollection;
 
 export let RUNE_LIST: BaseType[];
 export const HIGH_VALUE_RUNES_HARDCODED = new Set<string>([]);
@@ -188,6 +192,10 @@ async function loadItems(language: string, isTest = false) {
   for (const item of ITEMS_ITERATOR('"tradeTag":')) {
     TRADE_TAG_TO_REF.set(item.tradeTag!, item.refName);
   }
+
+  ITEM_VECTOR_DATA = await (
+    await fetch(`${import.meta.env.BASE_URL}data/item-vector-data.json`)
+  ).json();
 }
 
 async function loadStats(language: string, isTest = false) {
@@ -287,7 +295,7 @@ export async function init(lang: string, isTest = false) {
     console.log(
       "Cannot find stat" + (missing.length > 1 ? "s" : "") + missing.join("\n"),
     );
-  }
+  } 
   DELAYED_STAT_VALIDATION.clear();
 }
 

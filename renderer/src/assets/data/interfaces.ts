@@ -289,3 +289,18 @@ export interface RuneDataByTradeId {
     icon: string;
   }>;
 }
+
+export interface ItemTypeVectorData {
+  properties: number[]
+  modifiers: string[]
+}
+
+export interface ItemTypeVectorDataCollection {
+  generic: { [key: string]: ItemTypeVectorData };
+  unique: { [key: string]: ItemTypeVectorData };
+}
+
+export interface CatboostModelCollection {
+  generic: { [key: string]: any };
+  unique: { [key: string]: any };
+}

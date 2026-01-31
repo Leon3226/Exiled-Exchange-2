@@ -345,6 +345,8 @@ function upgradeConfig(_config: Config): Config {
     priceCheck.hotkey = (config as any).priceCheckKey;
     priceCheck.hotkeyHold = (config as any).priceCheckKeyHold;
     priceCheck.hotkeyLocked = (config as any).priceCheckLocked;
+    priceCheck.hotkeyInstant = (config as any).priceCheckInstant;
+    priceCheck.hotkeyInstantLocked = (config as any).priceCheckInstantLocked;
     priceCheck.showSeller = (config as any).showSeller;
     priceCheck.searchStatRange = (config as any).searchStatRange;
     priceCheck.showCursor = (config as any).priceCheckShowCursor;
@@ -584,6 +586,17 @@ function upgradeConfig(_config: Config): Config {
     config.configVersion = 27;
   }
 
+  if (config.configVersion < 29) {
+
+    config.widgets.push({
+      ...defaultConfig().widgets.find((w) => w.wmType === "price-check-instant")!,
+      wmId: Math.max(0, ...config.widgets.map((_) => _.wmId)) + 1,
+      wmZorder: null,
+    });
+
+    config.configVersion = 29;
+  }
+
   return config as unknown as Config;
 }
 
@@ -603,6 +616,21 @@ function getConfigForHost(): HostConfig {
     actions.push({
       shortcut: priceCheck.hotkeyLocked,
       action: { type: "copy-item", target: "price-check", focusOverlay: true },
+    });
+  }
+  const priceCheckInstant = AppConfig("price-check-instant") as widget.PriceCheckInstantWidget;
+  if (priceCheckInstant && priceCheckInstant.hotkeyInstant) {
+    actions.push({
+      shortcut: priceCheckInstant.hotkeyInstant,
+      action: { type: "copy-item", target: "price-check-instant", focusOverlay: false },
+      keepModKeys: true,
+    });
+  }
+  if (priceCheckInstant && priceCheckInstant.hotkeyInstantLocked) {
+    actions.push({
+      shortcut: priceCheckInstant.hotkeyInstantLocked,
+      action: { type: "copy-item", target: "price-check-instant", focusOverlay: false },
+      keepModKeys: true,
     });
   }
   actions.push({
