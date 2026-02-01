@@ -60,9 +60,7 @@ import {
 import ItemEditor from "./filters/ItemEditor.vue";
 import {
   BaseType,
-  HIGH_VALUE_RUNES_HARDCODED,
   loadUltraLateItems,
-  setLocalRuneFilter,
 } from "@/assets/data";
 import { translatedEffectsPseudos } from "./filters/pseudo";
 import { ItemEditorType } from "@/parser/meta";
@@ -119,25 +117,10 @@ export default defineComponent({
   setup(props) {
     const leagueId = computed(() => AppConfig().leagueId);
 
-    watch(
-      // FIXME: check if this is working as intended
-      () => leagueId.value,
-      () => {
-        const runeFilter = (item: BaseType) =>
-          Object.values(item.rune!).some((runeStat) =>
-            translatedEffectsPseudos(runeStat.string),
-          ) || HIGH_VALUE_RUNES_HARDCODED.has(item.refName);
-        setLocalRuneFilter(runeFilter);
-        loadUltraLateItems(runeFilter);
-      },
-      { immediate: true },
-    );
-
     const wm = inject<WidgetManager>("wm")!;
     const {
       xchgRate,
       initialLoading: xchgRateLoading,
-      queuePricesFetch,
     } = usePoeninja();
 
     nextTick(() => {
@@ -373,8 +356,8 @@ export default defineComponent({
       openLeagueSelection,
       rebuildKey,
       pricing,
-  itemPricingIcons,
-  iconEntries,
+      itemPricingIcons,
+      iconEntries,
       itemEditorAvailable: computed(() => {
         if (!item.value?.isOk()) return false;
         return getItemEditorType(item.value.value) !== ItemEditorType.None;
