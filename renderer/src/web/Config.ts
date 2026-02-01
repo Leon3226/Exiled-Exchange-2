@@ -620,7 +620,7 @@ function upgradeConfig(_config: Config): Config {
 
     config.readClientLog = false; // default to false, opt-in only
 
-    config.configVersion = 30;
+    config.configVersion = 29;
   }
   if (config.configVersion < 30) {
 

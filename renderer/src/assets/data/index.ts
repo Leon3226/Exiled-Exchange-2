@@ -182,9 +182,9 @@ async function loadItems(language: string, isTest = false) {
     TRADE_TAG_TO_REF.set(item.tradeTag!, item.refName);
   }
 
-  ITEM_VECTOR_DATA = await (
-    await fetch(`${import.meta.env.BASE_URL}data/item-vector-data.json`)
-  ).json();
+  // ITEM_VECTOR_DATA = await (
+  //   await fetch(`${import.meta.env.BASE_URL}data/item-vector-data.json`)
+  // ).json();
 }
 
 async function loadStats(language: string, isTest = false) {
