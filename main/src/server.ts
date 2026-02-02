@@ -5,9 +5,12 @@ import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
+import { fileURLToPath } from "url";
 import { IpcEvent, IpcEventPayload, HostState } from "../../ipc/types";
 import { ConfigStore } from "./host-files/ConfigStore";
 import { addFileUploadRoutes } from "./host-files/file-uploads";
+import { addPredictionRoutes } from "./prediction-routes";
+import { CatBoostService } from "./CatBoostService";
 import type { AppUpdater } from "./AppUpdater";
 import type { Logger } from "./RemoteLogger";
 
@@ -17,12 +20,23 @@ let lastActiveClient: WebSocket;
 
 addFileUploadRoutes(server);
 
+const catboostModelsPath = process.env.VITE_DEV_SERVER_URL
+  ? path.join(__dirname, "..", "..", "renderer", "public", "data", "gradientBoostModel")
+  : path.join(__dirname, "data", "gradientBoostModel");
+const catboostService = new CatBoostService(catboostModelsPath);
+catboostService.initialize().catch((err) => {
+  console.error("[CatBoost] Failed to initialize:", err);
+});
+addPredictionRoutes(server, catboostService);
+
 if (!process.env.VITE_DEV_SERVER_URL) {
   server.addListener("request", (req, res) => {
     if (
       req.url?.startsWith("/config") ||
       req.url?.startsWith("/uploads") ||
-      req.url?.startsWith("/proxy")
+      req.url?.startsWith("/proxy") ||
+      req.url?.startsWith("/predict") ||
+      req.url?.startsWith("/models")
     )
       return;
 

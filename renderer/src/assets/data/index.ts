@@ -5,6 +5,7 @@ import type {
   DropEntry,
   AugmentDataByAugment,
   AugmentDataByTradeId,
+  ItemTypeVectorDataCollection,
   Stat,
   StatMatcher,
   TranslationDict,
@@ -22,6 +23,8 @@ export let AUGMENT_DATA_BY_TRADE_ID: AugmentDataByTradeId;
 
 export let AUGMENT_LIST: BaseType[];
 export const HIGH_VALUE_AUGMENTS_HARDCODED = new Set<string>([]);
+
+export let ITEM_VECTOR_DATA: ItemTypeVectorDataCollection;
 
 export let ITEM_BY_TRANSLATED = (
   ns: BaseType["namespace"],
@@ -182,9 +185,9 @@ async function loadItems(language: string, isTest = false) {
     TRADE_TAG_TO_REF.set(item.tradeTag!, item.refName);
   }
 
-  // ITEM_VECTOR_DATA = await (
-  //   await fetch(`${import.meta.env.BASE_URL}data/item-vector-data.json`)
-  // ).json();
+  ITEM_VECTOR_DATA = await (
+    await fetch(`${import.meta.env.BASE_URL}data/item-vector-data.json`)
+  ).json();
 }
 
 async function loadStats(language: string, isTest = false) {

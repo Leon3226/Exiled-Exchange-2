@@ -4,7 +4,12 @@ import {
   ITEM_VECTOR_DATA as itemVectorData,
 } from "@/assets/data";
 
-export function transformItemIntoVector(item: ParsedItem) : any[] | null {
+export interface FeatureVectors {
+    numericFeatures: number[];
+    categoricalFeatures: string[];
+}
+
+export function transformItemIntoVector(item: ParsedItem) : FeatureVectors | null {
     let baseType = getItemBaseType(item);
     if (baseType == null){ return null; }
     
@@ -17,7 +22,7 @@ export function transformItemIntoVector(item: ParsedItem) : any[] | null {
     return transformDictionaryToDataVector(vector);
 }
 
-function getItemBaseType(item: ParsedItem): string | null {
+export function getItemBaseType(item: ParsedItem): string | null {
     let itemBase = item.category;
     if (itemBase == null){
         return null;
@@ -33,20 +38,57 @@ function getVectorData(baseType: string): ItemTypeVectorData | null {
     return data;
 }
 
-function transformDictionaryToDataVector(dict: {[key: string]: number}): any[] {
-    const map = new Map(Object.entries(dict));
-    return [...map.values()];
+function generateCombinations(arrays: string[][]): string[][] {
+    if (arrays.length === 0) return [[]];
+    if (arrays.length === 1) return arrays[0].map(v => [v]);
+
+    const result: string[][] = [];
+    const [first, ...rest] = arrays;
+    const restCombinations = generateCombinations(rest);
+
+    for (const value of first) {
+        for (const combination of restCombinations) {
+            result.push([value, ...combination]);
+        }
+    }
+
+    return result;
+}
+
+function transformDictionaryToDataVector(dict: {[key: string]: any}): FeatureVectors {
+    const numericFeatures: number[] = [];
+    const categoricalFeatures: string[] = [];
+
+    for (const value of Object.values(dict)) {
+        if (typeof value === 'string') {
+            categoricalFeatures.push(value);
+        } else if (typeof value === 'boolean') {
+            numericFeatures.push(value ? 1 : 0);
+        } else if (typeof value === 'number') {
+            numericFeatures.push(value);
+        } else {
+            categoricalFeatures.push(String(value ?? ''));
+        }
+    }
+
+    return { numericFeatures, categoricalFeatures };
 }
 
 function getEmptyVector(possibleModifiers: string[], possibleProperties: number[]): {[key: string]: any} {
     let vector = [] as {[key: string]: any};
     vector['baseType'] = ''
     vector['rarity'] = ''
-    vector['ilvi'] = ''
+    vector['ilvl'] = 0
 
     vector['corrupted'] = false
     vector['desecrated'] = false
     vector['mirrored'] = false
+    vector['sanctified'] = false
+
+    vector['level_requirement'] = 0
+    vector['dex_requirement'] = 0
+    vector['str_requirement'] = 0
+    vector['int_requirement'] = 0
 
     vector['prefixes'] = 0
     vector['suffixes'] = 0
@@ -76,12 +118,19 @@ function getEmptyVector(possibleModifiers: string[], possibleProperties: number[
 }
 
 function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, possibleProperties: number[]) {
-    vector['baseType'] = item.category?.toString();
+    vector['baseType'] = item.info.refName;
     vector['rarity'] = item.rarity?.toString();
     vector['ilvi'] = item.itemLevel;
 
     vector['corrupted'] = item.isCorrupted === true;
+    //Desecration calculated from mods
     vector['mirrored'] = item.isMirrored === true;
+    vector['sanctified'] = item.isSanctified === true;
+
+    vector['level_requirement'] = item.requires?.level ?? 0;
+    vector['str_requirement'] = item.requires?.str ?? 0;
+    vector['dex_requirement'] = item.requires?.dex ?? 0;
+    vector['int_requirement'] = item.requires?.int ?? 0;
 
     const pdps = Math.round((item.weaponAS ?? 0) * (item.weaponPHYSICAL ?? 0));
     const edps = Math.round((item.weaponAS ?? 0) * (item.weaponELEMENTAL ?? 0));
@@ -99,6 +148,7 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
     let itemDesecrated = false;
     let itemFractured = false;
     item.newMods.forEach(mod => {
+        if(mod.info.type === "rune") { return; } //skip runes for now
         let tier = mod.info.tier ?? 0;
         let type = mod.info.type;
         let generation = mod.info.generation;
@@ -121,22 +171,40 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
             if(type === "explicit") {statsToMerge.push(stat.explicit.toString());}
             if(type === "implicit") {statsToMerge.push(stat.implicit.toString());}
 
-            if(generation === "prefix") {prefixes += 1;}
-            if(generation === "suffix") {suffixes += 1;}
         });
-        // Skipping pseudo mods for now
-        let statString = statsToMerge.map(stat => stat.split(',')[0]).join(',')
-        if(!(`mod_${statString}_present` in vector)){
-            console.log(`Unknown modifier in vector data: ${statString}!`);
+
+        if(generation === "prefix") {prefixes += 1;}
+        if(generation === "suffix") {suffixes += 1;}
+
+        // Skip if no stats to merge
+        if (statsToMerge.length === 0 || statsToMerge.every(s => !s)) {
             return;
         }
-        vector[`mod_${statString}_present`] = 1;
-        vector[`mod_${statString}_fract`] = fractured ? 1 : 0
-        vector[`mod_${statString}_desecrated`] = desecrated ? 1 : 0
-        vector[`mod_${statString}_tier`] = tier
-        vector[`mod_${statString}_value`] = 0;
 
-        console.log("");
+        const statArrays = statsToMerge.map(stat => stat.split(',').filter(s => s));
+
+        const combinations = generateCombinations(statArrays);
+        let matchedStatString: string | null = null;
+
+        for (const combination of combinations) {
+            const statString = combination.sort().join(',');
+            if (`mod_${statString}_present` in vector) {
+                matchedStatString = statString;
+                break;
+            }
+        }
+
+        if (matchedStatString === null) {
+            const triedCombinations = combinations.map(c => c.sort().join(',')).join(' | ');
+            console.log(`Unknown modifier in vector data! Tried: ${triedCombinations}`);
+            return;
+        }
+
+        vector[`mod_${matchedStatString}_present`] = 1;
+        vector[`mod_${matchedStatString}_fract`] = fractured ? 1 : 0
+        vector[`mod_${matchedStatString}_desecrated`] = desecrated ? 1 : 0
+        vector[`mod_${matchedStatString}_tier`] = tier
+        vector[`mod_${matchedStatString}_value`] = 0;
     });
 
     possibleProperties.forEach(possibleProperty => {

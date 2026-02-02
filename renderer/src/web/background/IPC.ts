@@ -88,6 +88,57 @@ class HostTransport {
   get isElectron() {
     return navigator.userAgent.includes("Electron");
   }
+
+  async predict(
+    category: "generic" | "unique",
+    itemType: string,
+    numericFeatures: number[],
+    categoricalFeatures: string[] = [],
+  ): Promise<number | null> {
+    try {
+      const response = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category, itemType, numericFeatures, categoricalFeatures }),
+      });
+      const result = (await response.json()) as {
+        success: boolean;
+        prediction?: number | null;
+        error?: string;
+      };
+      if (!result.success) {
+        console.error("[Predict] Error:", result.error);
+        return null;
+      }
+      return result.prediction ?? null;
+    } catch (error) {
+      console.error("[Predict] Failed:", error);
+      return null;
+    }
+  }
+
+  async getAvailableModels(): Promise<{ generic: string[]; unique: string[] }> {
+    try {
+      const response = await fetch("/models");
+      return (await response.json()) as { generic: string[]; unique: string[] };
+    } catch (error) {
+      console.error("[Predict] Failed to get models:", error);
+      return { generic: [], unique: [] };
+    }
+  }
+  
+  async hasModel(category: "generic" | "unique", itemType: string): Promise<boolean> {
+    try {
+      const response = await fetch(
+        `/models/${category}/${encodeURIComponent(itemType)}`,
+      );
+      const result = (await response.json()) as { exists: boolean };
+      return result.exists;
+    } catch (error) {
+      console.error("[Predict] Failed to check model:", error);
+      return false;
+    }
+  }
 }
 
 export const MainProcess = new HostTransport();

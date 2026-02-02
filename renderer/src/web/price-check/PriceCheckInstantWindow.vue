@@ -195,18 +195,20 @@ export default defineComponent({
     const itemPricingIcons = reactive(new Map<number, {x: number, y: number, iconData: IconModel, forceDetailed: boolean, animateDelay: number}>());
     const iconEntries = computed(() => Array.from(itemPricingIcons.entries()));
     const itemPrices = new Map<string, number>();
+    const cacheEnabled = false;  
 
     async function getItemPriceFromText(itemText: string, eventItem: any): Promise<{price: number, itemHash: string}> {
       const itemHash: string = await getItemHashValue(itemText);
-      if (itemPrices.has(itemHash)) {
+      if (cacheEnabled && itemPrices.has(itemHash)) {
         return { itemHash, price: itemPrices.get(itemHash) ?? 0 };
       }
       item.value = handleItemPaste({ clipboard: itemText, item: eventItem });
       if (item.value.isOk()) {
-        // const estimatedPrice = getPrice(item.value.value);
-        const estimatedPrice = getFakePrice();
-    itemPrices.set(itemHash, estimatedPrice ?? 0); // Store the price or 0 if undefined. Maybe should log or handle undefined differently.
-    return { itemHash, price: estimatedPrice ?? 0 };
+        const realPrice = await getPrice(item.value.value);
+        // const estimatedPrice = realPrice ?? getFakePrice();
+        const estimatedPrice = realPrice ?? 0;
+        itemPrices.set(itemHash, estimatedPrice);
+        return { itemHash, price: estimatedPrice };
       }
       return {itemHash: "", price: 0};
     }

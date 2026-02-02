@@ -9,6 +9,15 @@ files:
     filter: ["main.js", "vision.js"]
   - from: "../renderer/dist"
     to: "."
+  - from: "node_modules/catboost"
+    to: "node_modules/catboost"
+    filter:
+      - "lib/**/*"
+      - "build/Release/catboost-node.node"
+      - "build/Release/catboostmodel.dll"
+      - "package.json"
+  - from: "../renderer/public/data/gradientBoostModel"
+    to: "data/gradientBoostModel"
 extraMetadata:
   main: "main.js"
 nsis:
