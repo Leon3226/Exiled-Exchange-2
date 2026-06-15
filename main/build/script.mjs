@@ -11,9 +11,17 @@ const electronRunner = (() => {
       console.info('Restarting Electron process.')
 
       if (handle) handle.kill()
-      handle = child_process.spawn(electron, ['.'], {
-        stdio: 'inherit'
-      })
+      handle = child_process.spawn(
+        electron,
+        [
+          '--inspect=9229',                 // Node inspector for Electron main
+          '--remote-debugging-port=9222',   // Chromium DevTools for renderer
+          '--enable-logging',               // (optional) extra logs from Electron/Chromium
+          '--enable-source-maps',           // Enable source maps in stack traces
+          '.'
+        ],
+        { stdio: 'inherit' }
+      )
     }
   }
 })()
@@ -32,6 +40,8 @@ const mainContext = await esbuild.context({
   platform: 'node',
   external: ['electron', 'uiohook-napi', 'electron-overlay-window', 'catboost'],
   outfile: 'dist/main.js',
+  sourcemap: true, 
+  sourcesContent: true,
   define: {
     'process.env.STATIC': (isDev) ? '"../build/icons"' : '"."',
     'process.env.VITE_DEV_SERVER_URL': (isDev) ? '"http://localhost:5173"' : 'null'

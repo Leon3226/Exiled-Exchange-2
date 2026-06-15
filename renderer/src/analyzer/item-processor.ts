@@ -16,7 +16,7 @@ export function transformItemIntoVector(item: ParsedItem) : FeatureVectors | nul
     let vectorData = getVectorData(baseType);
     if (vectorData == null){ return null; }
 
-    let vector = getEmptyVector(vectorData.modifiers, vectorData.properties);
+    let vector = getEmptyVector(vectorData.modifiers, vectorData.properties, vectorData.stats);
     fillVectorWithItemData(vector, item, vectorData.properties);
     
     return transformDictionaryToDataVector(vector);
@@ -74,7 +74,7 @@ function transformDictionaryToDataVector(dict: {[key: string]: any}): FeatureVec
     return { numericFeatures, categoricalFeatures };
 }
 
-function getEmptyVector(possibleModifiers: string[], possibleProperties: number[]): {[key: string]: any} {
+function getEmptyVector(possibleModifiers: string[], possibleProperties: number[], possibleStats: string[]): {[key: string]: any} {
     let vector = [] as {[key: string]: any};
     vector['baseType'] = ''
     vector['rarity'] = ''
@@ -111,7 +111,20 @@ function getEmptyVector(possibleModifiers: string[], possibleProperties: number[
         vector[`mod_${possibleModifier}_fract`] = 0
         vector[`mod_${possibleModifier}_desecrated`] = 0
         vector[`mod_${possibleModifier}_tier`] = 0
-        vector[`mod_${possibleModifier}_value`] = 0
+        // TODO: python's get_empty_vector has no mod_{modifier}_value field (only present/fract/
+        // desecrated/tier), so this extra always-zero column shifts every later column relative to
+        // the trained model. Commented out until the model is retrained with a matching column, then
+        // remove entirely.
+        // vector[`mod_${possibleModifier}_value`] = 0
+    });
+
+    // TODO: matches python's get_empty_vector, which appends one `stat_{stat}_value` column per
+    // entry in fields.stats. The training pipeline runs with skip_stats=True by default, so these
+    // are always 0 there too - left at 0 here. If training is ever run with --include-stats, this
+    // needs to compute real values the way vector_transformer.transform_item does (parsing mod
+    // text via parseMod and summing matching stat values).
+    possibleStats.forEach(possibleStat => {
+        vector[`stat_${possibleStat}_value`] = 0
     });
 
     return vector
@@ -120,7 +133,7 @@ function getEmptyVector(possibleModifiers: string[], possibleProperties: number[
 function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, possibleProperties: number[]) {
     vector['baseType'] = item.info.refName;
     vector['rarity'] = item.rarity?.toString();
-    vector['ilvi'] = item.itemLevel;
+    vector['ilvl'] = item.itemLevel;
 
     vector['corrupted'] = item.isCorrupted === true;
     //Desecration calculated from mods
@@ -201,10 +214,18 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
         }
 
         vector[`mod_${matchedStatString}_present`] = 1;
-        vector[`mod_${matchedStatString}_fract`] = fractured ? 1 : 0
-        vector[`mod_${matchedStatString}_desecrated`] = desecrated ? 1 : 0
+        // TODO: python's transform_item never sets mod_*_fract/mod_*_desecrated to 1 - get_stat_strings
+        // already rewrites fractured/desecrated hashes to "explicit" before the fract/desecrated checks
+        // run, so those checks are dead code and the trained model only ever saw 0 here. Hardcoded to 0
+        // to match; restore the lines below once the python bug is fixed and the model is retrained.
+        // vector[`mod_${matchedStatString}_fract`] = fractured ? 1 : 0
+        // vector[`mod_${matchedStatString}_desecrated`] = desecrated ? 1 : 0
+        vector[`mod_${matchedStatString}_fract`] = 0
+        vector[`mod_${matchedStatString}_desecrated`] = 0
         vector[`mod_${matchedStatString}_tier`] = tier
-        vector[`mod_${matchedStatString}_value`] = 0;
+        // TODO: python's get_empty_vector has no mod_{modifier}_value field - commented out until the
+        // model is retrained with a matching column, then remove entirely.
+        // vector[`mod_${matchedStatString}_value`] = 0;
     });
 
     possibleProperties.forEach(possibleProperty => {

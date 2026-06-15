@@ -307,6 +307,7 @@ export interface AugmentDataByTradeId {
 export interface ItemTypeVectorData {
   properties: number[]
   modifiers: string[]
+  stats: string[]
 }
 
 export interface ItemTypeVectorDataCollection {

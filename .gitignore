@@ -28,3 +28,6 @@ docs/.vitepress/dist
 docs/.vitepress/cache
 
 *.bin
+
+# Temportary files
+gradientBoostModel

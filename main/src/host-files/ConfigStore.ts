@@ -33,7 +33,7 @@ export class ConfigStore {
     if (process.env.VITE_DEV_SERVER_URL) return;
 
     if (tmp && !this.isTmpFile) {
-      this.cfgPath += ".tmp";
+      this.cfgPath += ".tmp"; 
       this.isTmpFile = true;
     }
     try {
