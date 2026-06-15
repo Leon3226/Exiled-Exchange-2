@@ -18,7 +18,7 @@ import {
   RATE_LIMIT_RULES,
   preventQueueCreation,
 } from "./common";
-import { STAT_BY_REF } from "@/assets/data";
+import { STAT_BY_REF, CLIENT_STRINGS as _$ } from "@/assets/data";
 import { RateLimiter } from "./RateLimiter";
 import { ModifierType } from "@/parser/modifiers";
 import { Cache } from "./Cache";
@@ -30,6 +30,7 @@ import {
   usePoeninja,
 } from "@/web/background/Prices";
 import { getCurrencyDetailsId } from "../trends/getDetailsId";
+import { areaLevelByAscendancyPoints } from "../filters/create-item-filters";
 
 export const CATEGORY_TO_TRADE_ID = new Map([
   [ItemCategory.Map, "map"],
@@ -116,15 +117,141 @@ const CONVERT_CURRENCY: Record<string, string> = {
   "perfect-exalted-orb": "P. exalted",
 };
 
-const TABLET_USES_STATS = [
-  "Adds Irradiated to a Map \n# use remaining",
-  "Adds Ritual Altars to a Map \n# use remaining",
-  "Adds a Kalguuran Expedition to a Map \n# use remaining",
-  "Adds a Mirror of Delirium to a Map \n# use remaining",
-  "Adds an Otherworldy Breach to a Map \n# use remaining",
-  "Empowers the Map Boss of a Map \n# use remaining",
-  "Adds Abysses to a Map \n# use remaining",
-];
+enum TradePropType {
+  Unused,
+  MapTier,
+  MapQuantityBonus,
+  MapRarityBonus,
+  MapPackSizeBonus,
+  GemLevel,
+  Quality,
+  QualityItemBonus,
+  QualitySupportBonus,
+  WeaponPhysicalDamage,
+  WeaponElementalDamage,
+  WeaponChaosDamage,
+  WeaponCriticalChance,
+  WeaponSpeed,
+  WeaponRange,
+  ShieldBlock,
+  ArmourReduction,
+  ArmourEvasion,
+  ArmourEnergyShield,
+  NetTier,
+  GemLevelProgress,
+  BestiaryGenus,
+  BestiaryGroup,
+  BestiaryFamily,
+  JewelRadius,
+  Spirit,
+  SanctumFloors,
+  UltimatumRooms,
+  Notable,
+  HarvestGrowth,
+  MonsterLevel,
+  StoredExperience,
+  StackSize,
+  Durability,
+  AreaLevel,
+  HeistWings,
+  HeistEscapeRoutes,
+  HeistRewardRooms,
+  HeistJobLockpicking,
+  HeistJobBruteForce,
+  HeistJobPerception,
+  HeistJobDemolition,
+  HeistJobCounterThaumaturgy,
+  HeistJobTrapDisarmament,
+  HeistJobAgility,
+  HeistJobDeception,
+  HeistJobEngineering,
+  HeistContractObjective,
+  RitualStoneWorldArea,
+  IncursionTempleRoom,
+  MavenCollectedMaps,
+  UltimatumTrialItemRequirement,
+  UltimatumTrialReward,
+  UltimatumTrialDifficulty,
+  ArmourWard,
+  ArmourAdaptation,
+  QualityGlobalStatsBonus,
+  ClassRequirement,
+  SentinelDroneUses,
+  SentinelDuration,
+  SentinelTagLimit,
+  SentinelEmpowerment,
+  LevelRequirement,
+  StrengthRequirement,
+  DexterityRequirement,
+  IntelligenceRequirement,
+  MapMapItemDropChanceBonus,
+  MapItemsDropCorruptedChance,
+  SanctumResolve,
+  SanctumInspiration,
+  SanctumGold,
+  SanctumMinorBoons,
+  SanctumMajorBoons,
+  SanctumMinorCurses,
+  SanctumMajorCurses,
+  SanctumPacts,
+  CompletionReward,
+  MapConversion,
+  ItemLevel,
+  CorpseTag,
+  MapConversionShaper,
+  MapConversionElder,
+  MapConversionConqueror,
+  MapConversionUnique,
+  MapConversionChargedCompass,
+  MapConversionMavenInvite,
+  MapConversionMemoryLine,
+  ScarabUseLimit, // ScrabUseLimit?
+  MapMapDropBonus,
+  MapScarabDropBonus,
+  MapCurrencyDropBonus,
+  MapDivinationCardDropBonus,
+  ShieldDeflect,
+  TrapToolDamage,
+  TrapToolSpeed,
+  TrapToolDetonationType,
+  WeaponRequirement,
+  WeaponReloadTime,
+  MapPortals,
+  ZanaInfluence,
+  MapGoldQuantityBonus,
+  MapExperienceBonus,
+  MapMagicMonstersQuantityBonus,
+  MapRareMonstersQuantityBonus,
+  ReservationCost,
+  MapKeyWorldArea,
+  RitualStoneUniqueMonsters,
+  RitualStoneOtherMonsters,
+}
+
+enum TradeNumberColors {
+  White = 0,
+  Augmented = 1,
+  Unmet = 2,
+  Physical = 3,
+  Fire = 4,
+  Cold = 5,
+  Lightning = 6,
+  Chaos = 7,
+  Unique = 8,
+  Unreachable = 9,
+  Currency = 10,
+  Reward = 11,
+  Divination = 12,
+  SanctumBoon = 13,
+  SanctumCurse = 14,
+  SanctumPact = 15,
+  GrantedSkill = 25,
+  Enchant = 8729,
+  Fractured = 8730,
+  Desecrated = 8731,
+  Sanctified = 8732,
+  Mutated = 8733,
+}
 
 interface FilterBoolean {
   option?: "true" | "false";
@@ -135,7 +262,6 @@ interface FilterRange {
 }
 
 interface TradeRequest {
-  /* eslint-disable camelcase */
   query: {
     status: { option: "available" | "securable" | "online" | "any" };
     name?: string | { discriminator: string; option: string };
@@ -214,6 +340,9 @@ interface TradeRequest {
           map_rare_monsters?: FilterRange;
           map_bonus?: FilterRange;
           map_iir?: FilterRange;
+          ultimatum_hint?: {
+            option?: "Victorious" | "Cowardly" | "Deadly";
+          };
         };
       };
       misc_filters?: {
@@ -229,6 +358,7 @@ interface TradeRequest {
           sanctum_gold?: FilterRange;
           unidentified_tier?: FilterRange;
           veiled?: FilterBoolean;
+          fractured_item?: FilterBoolean;
         };
       };
       trade_filters?: {
@@ -252,24 +382,62 @@ export interface SearchResult {
   inexact?: boolean;
 }
 
+interface TradeModMetadata {
+  name: string;
+  tier: number;
+  level: number;
+  magnitudes: Array<{ hash: string; min: string; max: string }>;
+}
+
+interface TradeDataRichLine {
+  name: string;
+  values: Array<[string, TradeNumberColors]>;
+  displayMode: number;
+  type?: TradePropType;
+  icon?: string;
+}
+
 interface FetchResult {
   id: string;
   item: {
-    ilvl?: number;
-    stackSize?: number;
-    corrupted?: boolean;
-    gemSockets?: string[];
-    properties?: Array<{
-      values: [[string, number]];
-      type:
-        | 78 // Corpse Level (Filled Coffin)
-        | 30 // Spawns a Level %0 Monster when Harvested
-        | 6 // Quality
-        | 5; // Level
+    w: 2;
+    h: 3;
+    icon: string;
+    sockets: Array<{
+      group: number;
+      type: string;
+      // sacred:orange, primal:blue,vivid:yellow, wild:purple
+      item?:
+        | "rune"
+        | "soulcore"
+        | "sacredtalisman"
+        | "primaltalisman"
+        | "vividtalisman"
+        | "wildtalisman"
+        | "jewel";
     }>;
+    fractured?: true;
+    name: string;
+    typeLine: string;
+    baseType: string;
+    rarity: ItemRarity;
+    frameType?: DisplayFrameType;
+    ilvl?: number;
+    identified: boolean;
+    unidentifiedTier?: number;
     note?: string;
+    sanctified?: true;
+    duplicated?: true;
+    stackSize?: number;
+    corrupted?: true;
+    doubleCorrupted?: true;
+    gemSockets?: string[];
+    properties?: TradeDataRichLine[];
+    requirements?: TradeDataRichLine[];
+    grantedSkills?: TradeDataRichLine[];
     implicitMods?: string[];
     explicitMods?: string[];
+    mutatedMods?: string[];
     enchantMods?: string[];
     runeMods?: string[];
     extended?: {
@@ -279,6 +447,16 @@ interface FetchResult {
       ar?: number;
       ev?: number;
       es?: number;
+      ward?: number;
+      dps_aug?: boolean;
+      pdps_aug?: boolean;
+      edps_aug?: boolean;
+      ar_aug?: boolean;
+      ev_aug?: boolean;
+      es_aug?: boolean;
+      ward_aug?: boolean;
+      mods?: Record<string, TradeModMetadata[]>;
+      hashes?: Record<string, Array<Array<string | number[] | null>>>;
     };
     pseudoMods?: string[];
     desecratedMods?: string[];
@@ -298,13 +476,45 @@ interface FetchResult {
   gone?: boolean;
 }
 
+export interface DisplayItemLine {
+  // text should include colon if required...
+  text: string;
+  value?: string | number;
+  color: TradeNumberColors;
+}
+export enum DisplayFrameType {
+  Normal = 0,
+  Magic = 1,
+  Rare = 2,
+  Unique = 3,
+  RunicMagic = 12,
+  RunicRare = 13,
+  RunicUnique = 14,
+}
+
 export interface DisplayItem {
-  runeMods?: string[];
-  implicitMods?: string[];
-  explicitMods?: string[];
-  enchantMods?: string[];
-  pseudoMods?: string[];
+  title: string[];
+  rarity: ItemRarity;
+  frameType?: DisplayFrameType;
+  nameBlock?: DisplayItemLine[];
+  itemProps?: DisplayItemLine[];
+  grantSkill?: DisplayItemLine[];
+  enchantMods?: DisplayItemLine[];
+  runeMods?: DisplayItemLine[];
+  implicitMods?: DisplayItemLine[];
+  fracturedMods?: DisplayItemLine[];
+  explicitMods?: DisplayItemLine[];
+  mutatedMods?: DisplayItemLine[];
+  desecratedMods?: DisplayItemLine[];
+  pseudoMods?: DisplayItemLine[];
   extended?: Array<{ text: string; value: number }>;
+  itemTags?: DisplayItemLine[];
+  sockets: Array<{ group: number; type: string; item?: string }>;
+  icon?: {
+    url: string;
+    w: number;
+    h: number;
+  };
 }
 
 export interface PricingResult {
@@ -482,6 +692,14 @@ export function createTradeRequest(
     );
   }
 
+  if (filters.ultimatumHint && !filters.ultimatumHint.disabled) {
+    propSet(
+      query.filters,
+      "map_filters.filters.ultimatum_hint.option",
+      filters.ultimatumHint.value,
+    );
+  }
+
   // MISC FILTERS
   if (filters.gemLevel && !filters.gemLevel.disabled) {
     propSet(
@@ -507,10 +725,33 @@ export function createTradeRequest(
   }
 
   if (filters.areaLevel && !filters.areaLevel.disabled) {
+    if (filters.awardedAscendancyPoints) {
+      // set max, lower has higher value, so exclude worse(higher area level) items
+      propSet(
+        query.filters,
+        "misc_filters.filters.area_level.max",
+        filters.areaLevel.value,
+      );
+    } else {
+      propSet(
+        query.filters,
+        "misc_filters.filters.area_level.min",
+        filters.areaLevel.value,
+      );
+    }
+  }
+
+  if (
+    filters.awardedAscendancyPoints &&
+    !filters.awardedAscendancyPoints.disabled
+  ) {
     propSet(
       query.filters,
       "misc_filters.filters.area_level.min",
-      filters.areaLevel.value,
+      areaLevelByAscendancyPoints(
+        item.info.refName,
+        filters.awardedAscendancyPoints.value,
+      ),
     );
   }
 
@@ -519,6 +760,14 @@ export function createTradeRequest(
       query.filters,
       "misc_filters.filters.identified.option",
       String(false),
+    );
+  }
+
+  if (filters.unidentifiedTier && !filters.unidentifiedTier.disabled) {
+    propSet(
+      query.filters,
+      "misc_filters.filters.unidentified_tier.min",
+      filters.unidentifiedTier.value,
     );
   }
 
@@ -583,23 +832,6 @@ export function createTradeRequest(
       "misc_filters.filters.sanctified.option",
       String(false),
     );
-  }
-
-  // Custom fake pseudo filter for uses remaining
-  if (filters.usesRemaining) {
-    query.stats.push({
-      type: "count",
-      value: { min: 1 },
-      disabled: filters.usesRemaining.disabled,
-      filters: TABLET_USES_STATS.map((ref) => {
-        const stat = STAT_BY_REF(ref)!;
-        return {
-          id: stat.trade.ids[ModifierType.Implicit][0],
-          value: { min: filters.usesRemaining!.value },
-          disabled: false,
-        };
-      }),
-    });
   }
 
   // TRADE FILTERS
@@ -733,6 +965,18 @@ export function createTradeRequest(
         propSet(
           query.filters,
           "equipment_filters.filters.es.max",
+          typeof input.max === "number" ? input.max : undefined,
+        );
+        break;
+      case "item.runic_ward":
+        propSet(
+          query.filters,
+          "equipment_filters.filters.ward.min",
+          typeof input.min === "number" ? input.min : undefined,
+        );
+        propSet(
+          query.filters,
+          "equipment_filters.filters.ward.max",
           typeof input.max === "number" ? input.max : undefined,
         );
         break;
@@ -888,9 +1132,7 @@ export function createTradeRequest(
     }
   }
 
-  stats = stats.filter(
-    (stat) => !INTERNAL_TRADE_IDS.includes(stat.tradeId[0] as any),
-  );
+  stats = stats.filter((stat) => !INTERNAL_TRADE_IDS.includes(stat.tradeId[0]));
 
   // if (filters.influences) {
   //   for (const influence of filters.influences) {
@@ -1051,65 +1293,7 @@ export async function requestResults(
   }
 
   return data.map<PricingResult>((result) => {
-    const runeMods = result.item.runeMods?.map((s) => parseAffixStrings(s));
-    const implicitMods = result.item.implicitMods?.map((s) =>
-      parseAffixStrings(s),
-    );
-    const explicitMods = result.item.explicitMods?.map((s) =>
-      parseAffixStrings(s),
-    );
-    const enchantMods = result.item.enchantMods?.map((s) =>
-      parseAffixStrings(s),
-    );
-    const desecratedMods = result.item.desecratedMods?.map((s) =>
-      parseAffixStrings(s),
-    );
-    const fracturedMods = result.item.fracturedMods?.map((s) =>
-      parseAffixStrings(s),
-    );
-    const pseudoMods = result.item.pseudoMods?.map((s) => {
-      if (s.startsWith("Sum: ")) {
-        const pseudoRes = +s.slice(5);
-        if (!isNaN(pseudoRes)) {
-          return `+${pseudoRes}% total Elemental Resistance`;
-        }
-      }
-      return s;
-    });
-    const extended = result.item.extended
-      ? Object.entries(result.item.extended)
-          .filter(([key, value]) => value !== undefined) // Include only keys with defined values
-          .filter(([key]) =>
-            ["ar", "ev", "es", "dps", "pdps", "edps"].includes(key),
-          ) // Exclude mods
-          .map(([key, value]) => {
-            const labels: Record<string, string> = {
-              ar: "Armour: ",
-              ev: "Evasion Rating: ",
-              es: "Energy Shield: ",
-              dps: "Total DPS: ",
-              pdps: "Physical DPS: ",
-              edps: "Elemental DPS: ",
-            };
-
-            return {
-              text: labels[key] || `${key}: `,
-              value: Math.round(value),
-            };
-          })
-      : undefined;
-
-    const displayItem: PricingResult["displayItem"] = {
-      runeMods,
-      implicitMods,
-      // HACK: fix the implementation at some point
-      explicitMods: (fracturedMods ?? [])
-        .concat(explicitMods ?? [])
-        .concat(desecratedMods ?? []),
-      enchantMods,
-      pseudoMods,
-      extended,
-    };
+    const displayItem: DisplayItem = parseFetchResult(result);
 
     let priceCurrencyRank: PricingResult["priceCurrencyRank"];
     if (
@@ -1242,3 +1426,339 @@ function nameToQuery(name: string, filters: ItemFilters) {
     };
   }
 }
+
+/**
+ * Parse out all the components from a fetch result into something easier to display on the ui
+ * @param result fetch result json from the trade site
+ * @returns item to display on ui
+ */
+function parseFetchResult(result: FetchResult): PricingResult["displayItem"] {
+  /* Components on the trade site:
+  Name block
+  ------
+  Item props
+  ------
+  Enchant mods
+  ------
+  Rune mods
+  ------
+  Implicit mods
+  ------
+  Explicit mods (+ fractured + desecrated)
+  ------
+  item tags
+  */
+
+  const title: string[] = [];
+  if (result.item.name && result.item.name.length > 0) {
+    title.push(result.item.name);
+  }
+  if (result.item.typeLine) {
+    title.push(result.item.typeLine);
+  }
+
+  const itemTags = [];
+
+  // Should be exclusive to all other tags(except corrupted)
+  if (result.item.identified === false) {
+    if (result.item.unidentifiedTier) {
+      itemTags.push({
+        text: `Unidentified (Tier ${result.item.unidentifiedTier})`,
+        color: TradeNumberColors.Unmet,
+      });
+    } else {
+      itemTags.push({
+        text: "item.unidentified",
+        color: TradeNumberColors.Unmet,
+      });
+    }
+  }
+
+  // remaining _should_ be exclusive
+  if (result.item.doubleCorrupted) {
+    itemTags.push({
+      text: _$.DOUBLE_CORRUPTED,
+      color: TradeNumberColors.Unmet,
+    });
+  } else if (result.item.corrupted) {
+    itemTags.push({ text: _$.CORRUPTED, color: TradeNumberColors.Unmet });
+  }
+  if (result.item.duplicated) {
+    itemTags.push({ text: _$.MIRRORED, color: TradeNumberColors.Augmented });
+  }
+  if (result.item.sanctified) {
+    itemTags.push({ text: _$.SANCTIFIED, color: TradeNumberColors.Sanctified });
+  }
+
+  const displayItem: PricingResult["displayItem"] = {
+    title,
+    rarity: result.item.rarity,
+    frameType: result.item.frameType,
+    nameBlock: buildNameBlock(result.item.extended, result.item.properties),
+    itemProps: buildItemProps(result.item.ilvl, result.item.requirements),
+    grantSkill: buildGrantSkillBlock(result.item.grantedSkills),
+    ...parseMods(result),
+    sockets: result.item.sockets,
+    itemTags,
+    icon: {
+      url: result.item.icon,
+      w: result.item.w,
+      h: result.item.h,
+    },
+  };
+
+  return displayItem;
+}
+
+function parseMods(result: FetchResult): {
+  enchantMods?: DisplayItemLine[] | undefined;
+  runeMods?: DisplayItemLine[] | undefined;
+  implicitMods?: DisplayItemLine[] | undefined;
+  explicitMods?: DisplayItemLine[] | undefined;
+  desecratedMods?: DisplayItemLine[] | undefined;
+  mutatedMods?: DisplayItemLine[] | undefined;
+  fracturedMods?: DisplayItemLine[] | undefined;
+  pseudoMods?: DisplayItemLine[] | undefined;
+} {
+  /*
+
+  */
+  return {
+    enchantMods: parseModBlock(
+      result.item.enchantMods,
+      TradeNumberColors.Enchant,
+    ),
+    runeMods: parseModBlock(result.item.runeMods, TradeNumberColors.Enchant),
+    implicitMods: parseModBlock(result.item.implicitMods),
+    fracturedMods: parseModBlock(
+      result.item.fracturedMods,
+      TradeNumberColors.Fractured,
+    ),
+    explicitMods: parseModBlock(result.item.explicitMods),
+    desecratedMods: parseModBlock(
+      result.item.desecratedMods,
+      TradeNumberColors.Desecrated,
+    ),
+    mutatedMods: parseModBlock(
+      result.item.mutatedMods,
+      TradeNumberColors.Mutated,
+    ),
+    pseudoMods: parseModBlock(result.item.pseudoMods),
+  };
+}
+
+function parseModBlock(
+  translated: string[] | undefined,
+  color: TradeNumberColors = TradeNumberColors.Augmented,
+  // mods: TradeModMetadata[] | undefined,
+  // hashes: Array<Array<string | number[] | null>> | undefined,
+): DisplayItemLine[] | undefined {
+  // separate function, allow doing complex parsing later if needed
+  if (!translated) return undefined;
+  return translated.map((s) => {
+    return { text: parseAffixStrings(s), color };
+  });
+}
+
+function buildNameBlock(
+  extended: FetchResult["item"]["extended"],
+  props: FetchResult["item"]["properties"],
+): DisplayItem["nameBlock"] {
+  const block: Array<{
+    text: string;
+    value: string | number;
+    color: TradeNumberColors;
+  }> = [];
+  if (!props || !extended) return block;
+
+  // put everything from props in the block, but replace certain ones
+  if (props) {
+    let hasDamage = false;
+    for (const prop of props) {
+      const { name, values, type } = prop;
+      let text: string | undefined;
+      switch (type) {
+        // TODO: swap to dps from extended
+        case TradePropType.WeaponPhysicalDamage:
+          block.push({
+            text: "item.physical_dps",
+            value: extended.pdps!,
+            color: useColor(extended.pdps_aug),
+          });
+          hasDamage = true;
+          continue;
+        case TradePropType.WeaponElementalDamage:
+          block.push({
+            text: "item.elemental_dps",
+            value: extended.edps!,
+            color: useColor(extended.edps_aug),
+          });
+          hasDamage = true;
+          continue;
+
+        case TradePropType.ArmourReduction:
+          block.push({
+            text: "item.armour",
+            value: extended.ar!,
+            color: useColor(extended.ar_aug) || values[0][1],
+          });
+          continue;
+        case TradePropType.ArmourEvasion:
+          block.push({
+            text: "item.evasion_rating",
+            value: extended.ev!,
+            color: useColor(extended.ev_aug) || values[0][1],
+          });
+          continue;
+        case TradePropType.ArmourEnergyShield:
+          block.push({
+            text: "item.energy_shield",
+            value: extended.es!,
+            color: useColor(extended.es_aug) || values[0][1],
+          });
+          continue;
+
+        case TradePropType.ArmourWard:
+          block.push({
+            text: "item.runic_ward",
+            value: extended.ward!,
+            color: useColor(extended.ward_aug) || values[0][1],
+          });
+          continue;
+
+        case TradePropType.Quality:
+          text = "item.quality";
+          break;
+
+        case TradePropType.WeaponSpeed:
+          text = "item.aps";
+          break;
+        case TradePropType.WeaponCriticalChance:
+          text = "item.crit";
+          break;
+        case TradePropType.WeaponReloadTime:
+          text = "item.reload_time";
+          break;
+        case TradePropType.ShieldBlock:
+          text = "item.block";
+          break;
+        case TradePropType.Spirit:
+          text = "item.spirit";
+          break;
+
+        // map stuffs
+        case TradePropType.MapTier:
+          text = "item.map_tier";
+          break;
+        case TradePropType.MapPortals:
+          text = "item.map_revives";
+          break;
+        case TradePropType.MapPackSizeBonus:
+          text = "item.map_pack_size";
+          break;
+        case TradePropType.MapMagicMonstersQuantityBonus:
+          text = "item.map_magic_monsters";
+          break;
+        case TradePropType.MapRareMonstersQuantityBonus:
+          text = "item.map_rare_monsters";
+          break;
+        case TradePropType.MapMapItemDropChanceBonus:
+          text = "item.map_drop_chance";
+          break;
+        case TradePropType.MapRarityBonus:
+          text = "item.map_item_rarity";
+          break;
+        case TradePropType.MapGoldQuantityBonus:
+          text = "item.map_gold";
+          break;
+        case TradePropType.MapQuantityBonus:
+          // text = "item.map_item_quantity";
+          break;
+      }
+
+      block.push({
+        text: text ?? `${parseAffixStrings(name)} `,
+        // if we have a value, there should only be one probably...
+        value: values.length ? values[0][0] : "",
+        color: values.length ? values[0][1] : TradeNumberColors.White,
+      });
+    }
+    if (hasDamage) {
+      const dpsIndex = block.findIndex((line) => line.text.includes("dps"));
+      block.splice(dpsIndex, 0, {
+        text: "item.total_dps",
+        value: extended.dps!,
+        color: useColor(extended.dps_aug),
+      });
+    }
+
+    return block;
+  }
+
+  function useColor(use: boolean | undefined) {
+    return use ? TradeNumberColors.Augmented : TradeNumberColors.White;
+  }
+}
+
+function buildItemProps(
+  ilvl: number | undefined,
+  requirements: TradeDataRichLine[] | undefined,
+): DisplayItem["itemProps"] {
+  if (!ilvl && !requirements) return;
+
+  const block: Array<{
+    text: string;
+    value: string | number;
+    color: TradeNumberColors;
+  }> = [];
+  if (ilvl) {
+    block.push({
+      text: "item.item_level",
+      value: ilvl,
+      color: TradeNumberColors.White,
+    });
+  }
+  if (requirements && requirements.length) {
+    let value = requirements[0].values[0][0];
+
+    if (requirements.length > 1) {
+      value = parseAffixStrings(
+        `${value}, ${requirements
+          .slice(1)
+          .map((r) => `${r.values[0][0]} ${r.name}`)
+          .join(", ")}`,
+      );
+    }
+
+    // do i actually care about this?
+    block.push({
+      // no colon for req
+      text: `${parseAffixStrings(requirements[0].name)} `,
+      value,
+      color: TradeNumberColors.White,
+    });
+  }
+  return block;
+}
+
+function buildGrantSkillBlock(
+  skills: TradeDataRichLine[] | undefined,
+): DisplayItemLine[] {
+  if (!skills || skills.length === 0) return [];
+  const block: DisplayItemLine[] = [];
+  for (const skill of skills) {
+    block.push({
+      text: `${parseAffixStrings(skill.name)}: `,
+      value: parseAffixStrings(skill.values[0][0]),
+      color: skill.values[0][1],
+    });
+  }
+
+  return block;
+}
+
+// Disable since this is export for tests
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const __testExports = {
+  parseFetchResult,
+};

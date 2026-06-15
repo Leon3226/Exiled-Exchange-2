@@ -36,6 +36,7 @@ mac:
       arch:
         - "universal"
   identity: null
+  x64ArchFiles: "*"
 appImage:
   executableArgs:
     - "--sandbox"

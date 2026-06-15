@@ -7,6 +7,7 @@ import type { StashSearchWidget } from "./stash-search/widget";
 import type { ItemCheckWidget } from "./item-check/widget";
 import type { ItemSearchWidget } from "./item-search/widget";
 import { registry as widgetRegistry } from "./overlay/widget-registry.js";
+import { LibraryWidget } from "./library/widget";
 
 const _config = shallowRef<Config | null>(null);
 let _lastSavedConfig: Config | null = null;
@@ -109,6 +110,8 @@ export function poeWebApi() {
       return "es.pathofexile.com";
     case "pt":
       return "br.pathofexile.com";
+    case "fr":
+      return "fr.pathofexile.com";
   }
 }
 
@@ -139,7 +142,7 @@ export interface Config {
   logKeys: boolean;
   accountName: string;
   stashScroll: boolean;
-  language: "en" | "ru" | "cmn-Hant" | "ko" | "ja" | "de" | "es" | "pt";
+  language: "en" | "ru" | "cmn-Hant" | "ko" | "ja" | "de" | "es" | "pt" | "fr";
   preferredTradeSite: "default" | "www";
   realm: "pc-ggg" | "pc-garena";
   widgets: widget.Widget[];
@@ -147,13 +150,13 @@ export interface Config {
   showAttachNotification: boolean;
   overlayAlwaysClose: boolean;
   enableAlphas: boolean;
-  alphas: [];
+  alphas: Array<"library">;
   tipsFrequency: TipsFrequency;
   readClientLog: boolean; // default to false, opt-in only
 }
 
 export const defaultConfig = (): Config => ({
-  configVersion: 29,
+  configVersion: 32,
   overlayKey: "Shift + Space",
   overlayBackground: "rgba(129, 139, 149, 0.15)",
   overlayBackgroundClose: true,
@@ -228,6 +231,7 @@ export const defaultConfig = (): Config => ({
 });
 
 function upgradeConfig(_config: Config): Config {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const config = _config as Omit<Config, "widgets"> & {
     widgets: Array<Record<string, any>>;
   };
@@ -622,7 +626,43 @@ function upgradeConfig(_config: Config): Config {
 
     config.configVersion = 29;
   }
+
   if (config.configVersion < 30) {
+    // NOTE: v0.14.0 || poe0.4.0d
+    const itemSearchId: number = config.widgets.find(
+      (w) => w.wmType === "item-search",
+    )!.wmId;
+    // splicing to insert after the item-search widget, for positioning on the main overlay
+    config.widgets.splice(itemSearchId, 0, {
+      ...defaultConfig().widgets.find((w) => w.wmType === "library")!,
+      wmId: Math.max(0, ...config.widgets.map((_) => _.wmId)) + 1,
+    });
+
+    config.configVersion = 30;
+  }
+
+  if (config.configVersion < 31) {
+    // NOTE: v0.15.0 || poe0.4.0k
+    const priceCheck = config.widgets.find(
+      (w) => w.wmType === "price-check",
+    ) as widget.PriceCheckWidget;
+    priceCheck.rememberListingType = false;
+
+    config.configVersion = 31;
+  }
+
+  if (config.configVersion < 32) {
+    // NOTE: v0.15.0 || poe0.4.0k
+    const priceCheck = config.widgets.find(
+      (w) => w.wmType === "price-check",
+    ) as widget.PriceCheckWidget;
+    priceCheck.initialDelay = 48;
+
+    config.configVersion = 32;
+  }
+  /* eslint-enable */
+
+  if (config.configVersion < 33) {
 
     config.widgets.push({
       ...defaultConfig().widgets.find((w) => w.wmType === "price-check-instant")!,
@@ -630,7 +670,7 @@ function upgradeConfig(_config: Config): Config {
       wmZorder: null,
     });
 
-    config.configVersion = 30;
+    config.configVersion = 33;
   }
 
   return config as unknown as Config;
@@ -710,6 +750,15 @@ function getConfigForHost(): HostConfig {
       action: { type: "copy-item", target: "item-check", focusOverlay: true },
     });
   }
+  const library = AppConfig("library") as LibraryWidget;
+  if (library.logItemKey) {
+    actions.push({
+      shortcut: library.logItemKey,
+      keepModKeys: true,
+      action: { type: "copy-item", target: "log-item" },
+    });
+  }
+
   const delveGrid = AppConfig("delve-grid") as widget.DelveGridWidget;
   if (delveGrid.toggleKey) {
     actions.push({
@@ -788,5 +837,8 @@ function getConfigForHost(): HostConfig {
     windowTitle: config.windowTitle,
     language: config.language,
     readClientLog: config.readClientLog,
+    libraryAlpha: config.enableAlphas && config.alphas.includes("library"),
+    libraryOutputPath: library.libraryOutputPath,
+    initialDelay: priceCheck.initialDelay,
   };
 }

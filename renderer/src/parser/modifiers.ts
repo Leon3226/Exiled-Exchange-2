@@ -35,7 +35,8 @@ export function sumStatsByModType(
             merged.stat.ref === statA.stat.ref &&
             merged.type === modA.info.type &&
             // Multiple allocations should not be merged
-            (statA.stat.ref !== "Allocates #" ||
+            ((statA.stat.ref !== "Allocates #" &&
+              statA.stat.ref !== "Legacy of #") ||
               merged.sources.some(
                 (src) =>
                   src.stat.translation.string === statA.translation.string,
@@ -51,7 +52,8 @@ export function sumStatsByModType(
             const targetStat = modB.stats.find(
               (statB) =>
                 statB.stat.ref === statA.stat.ref &&
-                (statA.stat.ref !== "Allocates #" ||
+                ((statA.stat.ref !== "Allocates #" &&
+                  statA.stat.ref !== "Legacy of #") ||
                   statB.translation.string === statA.translation.string),
             );
             if (targetStat) {
@@ -83,8 +85,18 @@ export function sumStatsByModType(
 
 export function statSourcesTotal(
   sources: StatSource[],
-  mode: "sum" | "max" = "sum",
+  mode: "sum" | "max" | "count" = "sum",
 ): StatRoll | undefined {
+  if (mode === "count") {
+    const count = sources.length;
+    return {
+      value: count,
+      min: count,
+      max: count,
+      option: !count ? undefined : sources[0].contributes?.option,
+    };
+  }
+
   const fn =
     mode === "sum"
       ? (a: number, b: number) => a + b
@@ -97,9 +109,10 @@ export function statSourcesTotal(
           sum.value = fn(sum.value, contributes.value);
           sum.min = fn(sum.min, contributes.min);
           sum.max = fn(sum.max, contributes.max);
+          sum.option = contributes.option;
           return sum;
         },
-        { value: 0, min: 0, max: 0 },
+        { value: 0, min: 0, max: 0, option: undefined } as StatRoll,
       );
 }
 
@@ -148,6 +161,23 @@ export function translateStatWithRoll(
   };
 }
 
+export function modsEqual(a: ParsedModifier, b: ParsedModifier) {
+  return (
+    a.stats.length === b.stats.length &&
+    a.info.name === b.info.name &&
+    a.info.tier === b.info.tier &&
+    a.info.generation === b.info.generation &&
+    a.info.type === b.info.type &&
+    a.stats.every(
+      (statA, i) =>
+        statA.stat.ref === b.stats[i].stat.ref &&
+        statA.roll?.min === b.stats[i].roll?.min &&
+        statA.roll?.max === b.stats[i].roll?.max &&
+        statA.roll?.value === b.stats[i].roll?.value,
+    )
+  );
+}
+
 export enum ModifierType {
   Pseudo = "pseudo",
   Explicit = "explicit",
@@ -164,3 +194,12 @@ export enum ModifierType {
   Desecrated = "desecrated",
   Skill = "skill",
 }
+
+export const EXPLICIT_MOD_TYPES = new Set([
+  ModifierType.Explicit,
+  ModifierType.Fractured,
+  ModifierType.Veiled,
+  ModifierType.Desecrated,
+  ModifierType.Crafted,
+  ModifierType.Sanctum,
+]);

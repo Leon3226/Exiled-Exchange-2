@@ -9,6 +9,9 @@ export interface HostConfig {
   windowTitle: string;
   language: string;
   readClientLog: boolean;
+  libraryAlpha: boolean;
+  libraryOutputPath: string | null;
+  initialDelay: number;
 }
 
 export interface ShortcutAction {
@@ -88,11 +91,13 @@ export type IpcEvent =
   | IpcItemText
   | IpcOcrText
   | IpcConfigChanged
-  | IpcUserAction;
+  | IpcUserAction
+  | IpcWriteToFile
+  | IpcReparseLog;
 
 export type IpcEventPayload<
   Name extends IpcEvent["name"],
-  T extends IpcEvent = IpcEvent
+  T extends IpcEvent = IpcEvent,
 > = T extends { name: Name; payload: infer P } ? P : never;
 
 type IpcOverlayAttached = Event<"MAIN->OVERLAY::overlay-attached">;
@@ -194,6 +199,8 @@ type IpcGameLog = Event<
   }
 >;
 
+type IpcReparseLog = Event<"CLIENT->MAIN::re-parse-log">;
+
 type IpcUpdaterState = Event<"MAIN->CLIENT::updater-state", UpdateInfo>;
 
 // Hotkeyable actions are defined in `ShortcutAction`.
@@ -208,6 +215,123 @@ type IpcUserAction = Event<
       text: string;
     }
 >;
+
+type IpcWriteToFile = Event<
+  "CLIENT->MAIN::write-data",
+  | {
+      action: "log-item";
+      text: string;
+    }
+  | {
+      action: "session";
+      start: boolean;
+      name?: string;
+      header?: string;
+    }
+  | {
+      action: "client-log-event";
+      data: ClientLogEvent;
+      close: boolean;
+    }
+>;
+
+export type ClientLogEvent =
+  | GeneralLogEvent
+  | LoadZoneEvent
+  | LevelUpEvent
+  | GameVersionEvent
+  | AltTabEvent
+  | NpcEvent
+  | PlayerDeathEvent
+  | PassiveTreeEvent
+  | PermanentBonusEvent
+  | SkillPointEvent
+  | MapNavEvent
+  | AfkEvent;
+
+type BaseLogEvent = {
+  ts: number;
+  ms: number;
+};
+
+export type GeneralLogEvent = BaseLogEvent & {
+  type: "log" | "game-start" | "login";
+};
+
+export type LoadZoneEvent = BaseLogEvent & {
+  type: "load-zone";
+  zone: string;
+  areaLevel: number;
+  seed: number;
+};
+
+export type LevelUpEvent = BaseLogEvent & {
+  type: "level-up";
+  charName: string;
+  charClass: string;
+  level: number;
+};
+
+export type GameVersionEvent = BaseLogEvent & {
+  type: "game-version";
+  version: string;
+};
+
+export type AltTabEvent = BaseLogEvent & {
+  type: "alt-tab";
+  gameFocused: boolean;
+};
+
+export type NpcEvent = BaseLogEvent & {
+  type: "npc";
+  npcName: string;
+  message: string;
+};
+
+export type PlayerDeathEvent = BaseLogEvent & {
+  type: "player-death";
+  charName: string;
+};
+
+export type PassiveTreeEvent = BaseLogEvent & {
+  type: "passive-tree";
+  allocate: boolean;
+  nodeId: string;
+  nodeName: string;
+};
+
+export type PermanentBonusEvent = BaseLogEvent & {
+  type: "permanent-bonus";
+  permanentBonus: string;
+  charName: string;
+};
+
+export type SkillPointEvent = BaseLogEvent & {
+  type: "skill-point";
+  points: number;
+  pointType:
+    | "passive"
+    | "weapon-set"
+    | "atlas"
+    // all atlas sub trees
+    | "map-boss"
+    | "arbiter-boss"
+    | "abyss"
+    | "ritual"
+    | "delirium"
+    | "expedition"
+    | "breach";
+};
+
+export type MapNavEvent = BaseLogEvent & {
+  type: "map-nav";
+  mapName: string;
+};
+
+export type AfkEvent = BaseLogEvent & {
+  type: "afk";
+  isAfk: boolean;
+};
 
 interface Event<TName extends string, TPayload = undefined> {
   name: TName;

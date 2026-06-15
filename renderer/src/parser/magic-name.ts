@@ -1,4 +1,8 @@
-import { ITEM_BY_REF, ITEM_BY_TRANSLATED } from "@/assets/data";
+import {
+  ITEM_BY_REF,
+  ITEM_BY_TRANSLATED,
+  TRADE_ITEM_BY_REF,
+} from "@/assets/data";
 import { AppConfig } from "@/web/Config";
 
 export function magicBasetype(name: string) {
@@ -16,13 +20,28 @@ export function magicBasetype(name: string) {
 
   const result = perm
     .map((name) => {
-      // HACK: Remember to remove "by translated" when controller copy is fixed
+      // BUG[UPSTREAM]: https://www.pathofexile.com/forum/view-thread/3913283
       const result =
         ITEM_BY_REF("ITEM", name) ?? ITEM_BY_TRANSLATED("ITEM", name);
-      return { name, found: result && result[0].craftable };
+      // TRADE_ITEM_BY_REF({ name }, true);
+      if (result) {
+        return { name, found: result && result[0].craftable, tradeItem: false };
+      }
+      const tradeResult = TRADE_ITEM_BY_REF({ name }, true);
+      return {
+        name,
+        found: tradeResult && tradeResult[0].craftable,
+        tradeItem: true,
+      };
     })
     .filter((res) => res.found)
-    .sort((a, b) => b.name.length - a.name.length);
+    .sort(
+      (a, b) =>
+        b.name.length -
+        a.name.length +
+        (b.tradeItem ? 0 : 100_000) -
+        (a.tradeItem ? 0 : 100_000),
+    );
 
   return result.length ? result[0].name : undefined;
 }

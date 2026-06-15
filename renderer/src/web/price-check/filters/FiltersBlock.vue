@@ -18,6 +18,11 @@
           :name="t('item.map_tier')"
         />
         <filter-btn-numeric
+          v-if="filters.awardedAscendancyPoints"
+          :filter="filters.awardedAscendancyPoints"
+          :name="t('item.ascendancy_points')"
+        />
+        <filter-btn-numeric
           v-if="filters.areaLevel"
           :filter="filters.areaLevel"
           :name="t('item.area_level')"
@@ -100,8 +105,14 @@
             :img="`/images/influence-${influence.value}.png`"
           />
         </template>
+        <!-- Implicitly should only be tier or plain unid from create-item-filters -->
+        <filter-btn-numeric
+          v-if="filters.unidentifiedTier"
+          :filter="filters.unidentifiedTier"
+          :name="t('item.unidentified_tier')"
+        />
         <filter-btn-logical
-          v-if="filters.unidentified"
+          v-else-if="filters.unidentified"
           :filter="filters.unidentified"
           :text="t('item.unidentified')"
         />
@@ -135,11 +146,12 @@
             )
           "
         />
-        <filter-btn-numeric
-          v-if="filters.usesRemaining"
-          :filter="filters.usesRemaining"
-          :name="t('item.uses_remaining')"
+        <filter-btn-logical
+          v-if="filters.ultimatumHint"
+          :filter="filters.ultimatumHint"
+          :text="t(`item.${filters.ultimatumHint.value.toLowerCase()}`)"
         />
+
         <filter-btn-logical
           v-if="hasStats"
           :collapse="statsVisibility.disabled"
@@ -224,6 +236,7 @@
             v-for="stat of item.unknownModifiers"
             :key="stat.type + '/' + stat.text"
             :stat="stat"
+            :item-text="item.rawText"
           />
         </template>
         <template v-if="showMissingFracturedWarning">
@@ -263,7 +276,7 @@
           <i class="fas fa-chevron-up pl-1 text-xs text-gray-600"></i>
         </button>
         <ui-toggle
-          v-if="filteredStats.length != stats.length"
+          v-if="filteredStats.length !== stats.length"
           v-model="showHidden"
           class="text-gray-400 pt-2"
           >{{ t(hiddenLabel) }}</ui-toggle

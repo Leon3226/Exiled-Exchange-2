@@ -90,7 +90,18 @@
         <template v-if="item?.isErr()">
           <ui-error-box class="m-4">
             <template #name>{{ t(item.error.name) }}</template>
-            <p>{{ t(item.error.message) }}</p>
+            <template #actions
+              ><reload-trade-data
+                :item-text="item.error.rawText"
+                :pos="checkPosition"
+            /></template>
+            <p>
+              {{
+                item.error.format
+                  ? t(item.error.message, item.error.format)
+                  : t(item.error.message)
+              }}
+            </p>
           </ui-error-box>
           <pre class="bg-gray-900 rounded m-4 overflow-x-hidden p-2">{{
             item.error.rawText
@@ -189,11 +200,13 @@ import {
 import { translatedEffectsPseudos } from "./filters/pseudo";
 import { ItemEditorType } from "@/parser/meta";
 import { getItemEditorType } from "./filters/util";
+import ReloadTradeData from "./fallback/ReloadTradeData.vue";
 
 type ParseError = {
   name: string;
   message: string;
   rawText: ParsedItem["rawText"];
+  format?: string[];
 };
 
 export default defineComponent({
@@ -231,6 +244,8 @@ export default defineComponent({
         openItemEditorAbove: false,
         coreCurrency: "exalted",
         currencyVolume: "both",
+        rememberListingType: false,
+        initialDelay: 48,
       };
     },
   } satisfies WidgetSpec,
@@ -246,6 +261,7 @@ export default defineComponent({
     ItemQuickPrice,
     UiErrorBox,
     UiPopover,
+    ReloadTradeData,
   },
   props: {
     config: {
@@ -330,7 +346,10 @@ export default defineComponent({
       checkPosition.value = e.position;
       advancedCheck.value = e.focusOverlay;
       performance.mark("price-check-start-handling-item");
-      item.value = handleItemPaste({ clipboard: e.clipboard, item: e.item });
+      item.value = handleItemPaste({
+        clipboard: e.clipboard,
+        item: e.item as ParsedItem,
+      });
 
       if (item.value.isOk()) {
         queuePricesFetch();
@@ -338,10 +357,8 @@ export default defineComponent({
       performance.mark("price-check-event-end");
     });
 
-    function handleItemPaste(e: { clipboard: string; item: any }) {
-      const newItem = (
-        e.item ? ok(e.item as ParsedItem) : parseClipboard(e.clipboard)
-      )
+    function handleItemPaste(e: { clipboard: string; item: ParsedItem }) {
+      const newItem = (e.item ? ok(e.item) : parseClipboard(e.clipboard))
         .andThen((item) =>
           (item.category === ItemCategory.HeistContract &&
             item.rarity !== ItemRarity.Unique) ||
@@ -350,11 +367,23 @@ export default defineComponent({
             ? err("item.unknown")
             : ok(item),
         )
-        .mapErr((err) => ({
-          name: `${err}`,
-          message: `${err}_help`,
-          rawText: e.clipboard,
-        }));
+        .mapErr((err) => {
+          if (err.startsWith("item.wrong_language")) {
+            const [errName, gameLang, eeLang] = err.split("|");
+            return {
+              name: `${errName}`,
+              message: `${errName}_help`,
+              rawText: e.clipboard,
+              format: [gameLang, eeLang],
+            };
+          }
+
+          return {
+            name: `${err}`,
+            message: `${err}_help`,
+            rawText: e.clipboard,
+          };
+        });
       performance.mark("price-check-parse-end");
       return newItem;
     }

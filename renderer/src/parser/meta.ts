@@ -1,4 +1,5 @@
 export enum ItemCategory {
+  Unknown = "Unknown",
   Map = "Map",
   CapturedBeast = "Captured Beast",
   MetamorphSample = "Metamorph Sample",
@@ -62,6 +63,7 @@ export enum ItemCategory {
   Buckler = "Buckler",
   MapFragment = "MapFragment",
   Talisman = "Talisman",
+  Augment = "Augment",
 }
 
 export const WEAPON_ONE_HANDED_MELEE = new Set([
@@ -119,6 +121,13 @@ export const ACCESSORY = new Set([
   ItemCategory.Ring,
   ItemCategory.Trinket,
   // ItemCategory.Quiver
+]);
+
+export const GEM = new Set([
+  ItemCategory.Gem,
+  ItemCategory.MetaGem,
+  ItemCategory.SupportGem,
+  // ItemCategory.UncutGem,
 ]);
 
 export enum ItemEditorType {

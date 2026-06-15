@@ -58,6 +58,8 @@ export interface PriceCheckWidget extends Widget {
   openItemEditorAbove: boolean;
   coreCurrency: "exalted" | "chaos";
   currencyVolume: "none" | "value" | "item" | "both";
+  rememberListingType: boolean;
+  initialDelay: number;
 }
 
 export interface PriceCheckInstantWidget extends Widget {
@@ -81,4 +83,10 @@ export interface ImageStripWidget extends Widget {
     id: number;
     url: string;
   }>;
+}
+
+export interface NotepadWidget extends Widget {
+  anchor: Anchor;
+  notepadBody: string;
+  notepadSize: 0 | 1 | 2;
 }

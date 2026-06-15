@@ -35,6 +35,7 @@ export interface ParsedItem {
   armourAR?: number;
   armourEV?: number;
   armourES?: number;
+  armourRW?: number;
   armourBLOCK?: number;
   basePercentile?: number;
   weaponCRIT?: number;
@@ -44,8 +45,9 @@ export interface ParsedItem {
   weaponFIRE?: number;
   weaponCOLD?: number;
   weaponLIGHTNING?: number;
-  weaponChaos?: number;
-  weaponReload?: number;
+  weaponCHAOS?: number;
+  weaponRELOAD?: number;
+  weaponSPIRIT?: number;
   mapBlighted?: "Blighted" | "Blight-ravaged";
   mapTier?: number;
   mapPackSize?: number;
@@ -99,6 +101,11 @@ export interface ParsedItem {
     str: number;
     dex: number;
     int: number;
+  };
+  unidentifiedTier?: number;
+  trials?: {
+    numberOfTrials?: number;
+    ultimatumHint?: "Victorious" | "Cowardly" | "Deadly";
   };
   info: BaseType;
   rawText: string;

@@ -71,15 +71,23 @@ export interface ItemFilters {
     value: true;
     disabled: boolean;
   };
+  unidentifiedTier?: {
+    value: number;
+    disabled: boolean;
+  };
   veiled?: {
     statRefs: string[];
     veiledCount: number;
     disabled: boolean;
   };
+  awardedAscendancyPoints?: FilterNumeric;
+  ultimatumHint?: {
+    value: "Victorious" | "Cowardly" | "Deadly";
+    disabled: boolean;
+  };
   areaLevel?: FilterNumeric;
   heistWingsRevealed?: FilterNumeric;
   sentinelCharge?: FilterNumeric;
-  usesRemaining?: FilterNumeric;
   trade: {
     offline: boolean;
     onlineInLeague: boolean;
@@ -144,11 +152,12 @@ export interface StatFilter {
   editorAdded?: BaseType;
 }
 
-export const INTERNAL_TRADE_IDS = [
+export const _INTERNAL_TRADE_IDS = [
   "item.base_percentile",
   "item.armour",
   "item.evasion_rating",
   "item.energy_shield",
+  "item.runic_ward",
   "item.block",
   "item.total_dps",
   "item.physical_dps",
@@ -173,6 +182,7 @@ export const INTERNAL_TRADE_IDS = [
 ] as const;
 
 export type InternalTradeId = (typeof INTERNAL_TRADE_IDS)[number];
+export const INTERNAL_TRADE_IDS = _INTERNAL_TRADE_IDS as readonly string[];
 
 export enum ItemHasEmptyModifier {
   Any = 0,

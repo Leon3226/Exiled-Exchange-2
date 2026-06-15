@@ -34,24 +34,16 @@
       {{ result.itemLevel }}
     </td>
     <td
-      v-if="
-        item.category === ItemCategory.Gem ||
-        item.category === ItemCategory.UncutGem
-      "
+      v-if="isGem || item.category === ItemCategory.UncutGem"
       class="pl-2 whitespace-nowrap"
     >
       {{ result.level }}
     </td>
-    <td
-      v-if="item.category === ItemCategory.Gem"
-      class="pl-2 whitespace-nowrap"
-    >
+    <td v-if="isGem" class="pl-2 whitespace-nowrap">
       {{ result.gemSockets }}
     </td>
     <td
-      v-if="
-        (quality && !quality.disabled) || item.category === ItemCategory.Gem
-      "
+      v-if="(quality && !quality.disabled) || isGem"
       class="px-2 whitespace-nowrap text-blue-400 text-right"
     >
       {{ result.quality }}
@@ -105,34 +97,36 @@
       >
     </td>
   </tr>
+  <div ref="content">
+    <!-- isHovered is mostly used here to prevent tooltip from rendering on initial load, tooltip is kinda expensive to mount -->
+    <tooltip-item :result="result" v-if="isHovered" />
+  </div>
 </template>
 
 <script lang="ts">
 import {
   computed,
-  createApp,
   defineComponent,
+  onBeforeUnmount,
   onMounted,
-  onUnmounted,
   PropType,
   ref,
 } from "vue";
-import "tippy.js/dist/tippy.css";
-import "tippy.js/themes/light.css";
 import { PricingResult } from "./pathofexile-trade";
 import { ParsedItem } from "@/parser/ParsedItem";
 import { FilterNumeric } from "../filters/interfaces";
 import { useI18nNs } from "@/web/i18n";
 import { PriceCheckWidget } from "@/web/overlay/widgets";
-import TooltipItem from "./TooltipItem.vue";
 import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
-import "tippy.js/themes/light.css";
 import { AppConfig } from "@/web/Config";
 import { ItemCategory } from "@/parser";
+import TooltipItem from "./TooltipItem.vue";
+import { GEM } from "@/parser/meta";
 
 export default defineComponent({
   name: "TradeItem",
+  components: { TooltipItem },
   props: {
     result: {
       type: Object as PropType<
@@ -165,8 +159,10 @@ export default defineComponent({
       () => AppConfig<PriceCheckWidget>("price-check")!.itemHoverTooltip,
     );
     const target = ref<HTMLElement>(null!);
+    const content = ref<HTMLElement>(null!);
     const { t } = useI18nNs("trade_result");
     let instance: Instance;
+
     // Shift Key Detection
     const isShiftPressed = ref(false);
     const isHovered = ref(false); // Track hover state
@@ -198,52 +194,54 @@ export default defineComponent({
 
       // tippy stuff
       instance = tippy(target.value, {
+        content: content.value,
         interactive: true,
-        theme: "light",
-        trigger: undefined,
+        theme: "item-tooltip",
+        trigger: "mouseenter",
         placement: "left",
         arrow: true,
         delay: [0, 0],
         animation: false,
         maxWidth: "none",
-        onShow() {
-          const app = createApp(TooltipItem, {
-            result: props.result,
-          });
-          const tooltipContainer = document.createElement("div");
-          app.mount(tooltipContainer);
-          instance.setContent(tooltipContainer);
-        },
       });
       if (tooltipOption.value === "keybind") {
         instance.disable();
       }
     });
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
 
-      // tippy stuff
-      instance.destroy();
+      instance?.destroy();
     });
     return {
       t,
       target,
+      content,
       isHovered,
       isShiftPressed,
       ItemCategory,
+      isGem: computed(
+        () => props.item.category && GEM.has(props.item.category),
+      ),
     };
   },
 });
 </script>
 
 <style lang="postcss">
-.tippy-box {
-  @apply rounded;
+.tippy-box[data-theme~="item-tooltip"] {
+  @apply w-fit h-fit;
+  /* hiding box more */
+  @apply shadow-none bg-transparent;
 }
 
-.tippy-content {
-  @apply p-1;
+div[data-tippy-root] .tippy-box[data-theme~="item-tooltip"] {
+  @apply bg-transparent;
+}
+
+.tippy-box[data-theme~="item-tooltip"] .tippy-content {
+  @apply p-0 w-fit h-fit;
 }
 </style>

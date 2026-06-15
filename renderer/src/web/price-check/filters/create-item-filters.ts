@@ -6,7 +6,7 @@ import { BaseType, ITEM_BY_REF } from "@/assets/data";
 import { CATEGORY_TO_TRADE_ID } from "../trade/pathofexile-trade";
 import { PriceCheckWidget } from "@/web/overlay/widgets";
 import { isArmourOrWeaponOrCaster } from "@/parser/Parser";
-import { ARMOUR, WEAPON } from "@/parser/meta";
+import { ARMOUR, GEM, WEAPON } from "@/parser/meta";
 import { maxUsefulItemLevel } from "./common";
 
 export const SPECIAL_SUPPORT_GEM = [
@@ -25,6 +25,13 @@ const CATEGORIES_WITH_USEFUL_QUALITY = new Set([
 interface CreateOptions {
   league: string;
   currency: string | undefined;
+  listingType:
+    | "securable"
+    | "any"
+    | "online"
+    | "available"
+    | "onlineleague"
+    | undefined;
   collapseListings: "app" | "api";
   activateStockFilter: boolean;
   exact: boolean;
@@ -42,7 +49,7 @@ export function createFilters(
     trade: {
       offline: false,
       onlineInLeague: false,
-      listingType: "securable",
+      listingType: opts.listingType ?? "securable",
       listed: undefined,
       currency: opts.currency,
       league: opts.league,
@@ -50,11 +57,14 @@ export function createFilters(
     },
   };
 
-  if (item.category === ItemCategory.Gem && !tradeTag(item)) {
+  if (item.category && GEM.has(item.category) && !tradeTag(item)) {
     return createGemFilters(item, filters, opts);
   }
   if (item.category === ItemCategory.UncutGem) {
     return createUncutGemFilters(item, filters, opts);
+  }
+  if (item.category === ItemCategory.Currency && item.trials) {
+    return createTrialsFilters(item, filters, opts);
   }
   if (item.category === ItemCategory.CapturedBeast) {
     filters.searchExact = {
@@ -124,6 +134,7 @@ export function createFilters(
     return filters;
   }
 
+  // "endgame" items (map-like items) (also uniques??)
   if (item.category === ItemCategory.Map) {
     if (item.rarity === ItemRarity.Unique && item.info.unique) {
       filters.searchExact = {
@@ -447,10 +458,17 @@ export function createFilters(
   }
 
   if (item.isUnidentified) {
-    filters.unidentified = {
-      value: true,
-      disabled: item.rarity !== ItemRarity.Unique,
-    };
+    if (item.unidentifiedTier) {
+      filters.unidentifiedTier = {
+        value: item.unidentifiedTier,
+        disabled: item.unidentifiedTier < 5,
+      };
+    } else {
+      filters.unidentified = {
+        value: true,
+        disabled: item.rarity !== ItemRarity.Unique,
+      };
+    }
   }
 
   if (item.isVeiled) {
@@ -469,20 +487,6 @@ export function createFilters(
         filters.itemLevel.disabled = false;
       }
     }
-  }
-
-  if (item.category === ItemCategory.Tablet && !item.isUnidentified) {
-    const usesRemaining = item.statsByType.find(
-      (t) => t.type === ModifierType.Implicit,
-    )!.sources[0].contributes!.value;
-    filters.usesRemaining = {
-      value: usesRemaining,
-      disabled: usesRemaining < 10,
-    };
-    // Remove the used stat
-    item.statsByType = item.statsByType.filter(
-      (t) => t.type !== ModifierType.Implicit,
-    );
   }
 
   if (
@@ -600,6 +604,96 @@ export function createUncutGemFilters(
   }
 
   return filters;
+}
+
+export function createTrialsFilters(
+  item: ParsedItem,
+  filters: ItemFilters,
+  opts: CreateOptions,
+) {
+  const refName = item.info.refName;
+  filters.searchExact = {
+    baseType: item.info.name,
+    baseTypeTrade: t(opts, item.info),
+  };
+  const fixedAreaLevel = ascendancyPointsByAreaLevel(refName, item.areaLevel!);
+
+  filters.awardedAscendancyPoints = {
+    value: fixedAreaLevel,
+    disabled: false,
+  };
+
+  filters.areaLevel = {
+    value: item.areaLevel!,
+    disabled: false,
+  };
+
+  if (refName === "Inscribed Ultimatum" && item.trials?.ultimatumHint) {
+    filters.ultimatumHint = {
+      value: item.trials.ultimatumHint,
+      disabled: true,
+    };
+  }
+
+  return filters;
+}
+
+const ASCENDANCY_POINTS: Record<string, Record<number, number>> = {
+  "Inscribed Ultimatum": {
+    1: 1,
+    2: 60,
+    3: 75,
+  },
+  "Djinn Barya": {
+    1: 1,
+    2: 45,
+    3: 60,
+    4: 75,
+  },
+};
+
+export function areaLevelByAscendancyPoints(refName: string, points: number) {
+  if (!(refName in ASCENDANCY_POINTS)) {
+    return 0;
+  }
+
+  const maxPossiblePoints = refName === "Inscribed Ultimatum" ? 3 : 4;
+  // cases not possible
+  if (points < 1) {
+    return 1;
+  } else if (points > maxPossiblePoints) {
+    return 75;
+  }
+
+  const trialLevels = ASCENDANCY_POINTS[refName];
+
+  return trialLevels[points];
+}
+
+export function ascendancyPointsByAreaLevel(
+  refName: string,
+  areaLevel: number,
+) {
+  if (!(refName in ASCENDANCY_POINTS)) {
+    return 0;
+  }
+
+  const maxPossiblePoints = refName === "Inscribed Ultimatum" ? 3 : 4;
+
+  // cases not possible
+  if (areaLevel < 1) {
+    return 1;
+  } else if (areaLevel > 80) {
+    return maxPossiblePoints;
+  }
+
+  for (let i = maxPossiblePoints; i >= 1; i--) {
+    if (areaLevel >= ASCENDANCY_POINTS[refName][i]) {
+      return i;
+    }
+  }
+
+  return 1;
 }
 
 function t(opts: CreateOptions, info: BaseType) {

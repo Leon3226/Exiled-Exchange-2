@@ -1,7 +1,6 @@
 name: Bug Report
 description: File a bug report.
 title: "[Bug]: "
-labels: ["bug"]
 body:
   - type: markdown
     attributes:
@@ -59,22 +58,16 @@ body:
       label: Version
       description: What version of EE2 are you running? You can see this in Settings -> About
       options:
-        - 0.13.10
-        - 0.13.9
-        - 0.13.8
-        - 0.13.7
-        - 0.13.6
-        - 0.13.5
-        - 0.13.4
-        - 0.13.3
-        - 0.13.2
-        - 0.13.1
-        - 0.13.0
-        - 0.12.x
-        - 0.11.x
-        - 0.10.x
+        - 0.15.5
+        - 0.15.4
+        - 0.15.3
+        - 0.15.2
+        - 0.15.1
+        - 0.15.0
+        - 0.14.0
+        - 0.13.x
         - Change me
-      default: 14
+      default: 8
     validations:
       required: true
   - type: textarea

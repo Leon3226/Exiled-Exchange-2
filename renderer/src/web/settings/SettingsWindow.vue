@@ -63,7 +63,7 @@
           >
             {{ t("app.quit") }}
           </button>
-          <div
+          <!-- <div
             class="text-gray-400 text-center mt-auto pr-3 pt-4 pb-12"
             style="max-width: fit-content; min-width: 100%"
           >
@@ -75,7 +75,7 @@
               target="_blank"
               ><img class="inline h-5" src="/images/Patreon.svg"
             /></a>
-          </div>
+          </div> -->
         </div>
         <div class="text-gray-100 grow layout-column bg-gray-900">
           <div class="grow overflow-y-auto bg-gray-800 rounded-tl">
@@ -141,6 +141,7 @@ import SettingsStashSearch from "../stash-search/stash-search-editor.vue";
 import SettingsStopwatch from "../stopwatch/settings-stopwatch.vue";
 import SettingsItemSearch from "../item-search/settings-item-search.vue";
 import SettingsLeveling from "../leveling/settings-leveling.vue";
+import SettingsLibrary from "../library/settings-library.vue";
 import { disableWidget, enableWidget, findWidget } from "./utils";
 
 function shuffle<T>(array: T[]): T[] {
@@ -260,6 +261,23 @@ export default defineComponent({
       },
     );
 
+    watch(
+      () =>
+        configClone.value?.enableAlphas &&
+        configClone.value?.alphas.includes("library"),
+      (curr) => {
+        if (curr === undefined) return;
+        const library = findWidget("library", configClone.value!);
+        if (!library) return;
+
+        if (curr) {
+          enableWidget(library);
+        } else {
+          disableWidget(library);
+        }
+      },
+    );
+
     const menuItems = computed(() =>
       flatJoin(
         menuByType(configWidget.value?.wmType).map((group) =>
@@ -329,6 +347,8 @@ function menuByType(type?: string) {
       return [[SettingsPricecheck]];
     case "item-search":
       return [[SettingsItemSearch]];
+    case "library":
+      return [[SettingsLibrary]];
     default:
       return [
         [SettingsHotkeys, SettingsChat],
