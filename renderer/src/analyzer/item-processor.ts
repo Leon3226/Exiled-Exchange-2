@@ -3,22 +3,38 @@ import {
     ItemTypeVectorData,
   ITEM_VECTOR_DATA as itemVectorData,
 } from "@/assets/data";
+import { extractStatValues } from "./stat-value-extractor";
 
 export interface FeatureVectors {
     numericFeatures: number[];
     categoricalFeatures: string[];
 }
 
+// Must match the `skip_stats` flag the currently-loaded models were trained with
+// (training/pipeline.py / bulkTrainer.py). Models trained with skip_stats=True
+// (the default) never saw non-zero stat_*_value columns - flipping this on without
+// retraining those models would feed them out-of-distribution inputs.
+const STAT_VALUE_EXTRACTION_ENABLED = false;
+
 export function transformItemIntoVector(item: ParsedItem) : FeatureVectors | null {
     let baseType = getItemBaseType(item);
     if (baseType == null){ return null; }
-    
+
     let vectorData = getVectorData(baseType);
     if (vectorData == null){ return null; }
 
     let vector = getEmptyVector(vectorData.modifiers, vectorData.properties, vectorData.stats);
     fillVectorWithItemData(vector, item, vectorData.properties);
-    
+
+    if (STAT_VALUE_EXTRACTION_ENABLED) {
+        const statValues = extractStatValues(item.newMods, vectorData.stats);
+        for (const [key, value] of Object.entries(statValues)) {
+            if (key in vector) {
+                vector[key] += value;
+            }
+        }
+    }
+
     return transformDictionaryToDataVector(vector);
 }
 

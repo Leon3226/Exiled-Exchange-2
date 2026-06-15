@@ -201,7 +201,7 @@ export default defineComponent({
       const itemHash: string = await getItemHashValue(itemText);
       if (cacheEnabled && itemPrices.has(itemHash)) {
         return { itemHash, price: itemPrices.get(itemHash) ?? 0 };
-      }
+      } 
       item.value = handleItemPaste({ clipboard: itemText, item: eventItem });
       if (item.value.isOk()) {
         const realPrice = await getPrice(item.value.value);
