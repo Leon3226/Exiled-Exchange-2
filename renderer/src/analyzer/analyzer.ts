@@ -1,5 +1,5 @@
 import { ParsedItem } from "@/parser";
-import { transformItemIntoVector, getItemBaseType } from "@/analyzer/item-processor";
+import { transformItemIntoVector } from "@/analyzer/item-processor";
 import { MainProcess } from "@/web/background/IPC";
 
 export async function getPrice(item: ParsedItem): Promise<number | null> {
@@ -8,14 +8,9 @@ export async function getPrice(item: ParsedItem): Promise<number | null> {
         return null;
     }
 
-    const itemType = getItemBaseType(item);
-    if (itemType == null) {
-        return null;
-    }
-
     const prediction = await MainProcess.predict(
-        "generic",
-        itemType,
+        featureVectors.category,
+        featureVectors.itemType,
         featureVectors.numericFeatures,
         featureVectors.categoricalFeatures
     );

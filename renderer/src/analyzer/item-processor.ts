@@ -1,4 +1,4 @@
-import { ParsedItem } from "@/parser";
+import { ParsedItem, ItemRarity } from "@/parser";
 import {
     ItemTypeVectorData,
   ITEM_VECTOR_DATA as itemVectorData,
@@ -6,6 +6,8 @@ import {
 import { extractStatValues } from "./stat-value-extractor";
 
 export interface FeatureVectors {
+    category: "generic" | "unique";
+    itemType: string;
     numericFeatures: number[];
     categoricalFeatures: string[];
 }
@@ -16,13 +18,11 @@ export interface FeatureVectors {
 // retraining those models would feed them out-of-distribution inputs.
 const STAT_VALUE_EXTRACTION_ENABLED = false;
 
-export function transformItemIntoVector(item: ParsedItem) : FeatureVectors | null {
-    let baseType = getItemBaseType(item);
-    if (baseType == null){ return null; }
+export function transformItemIntoVector(item: ParsedItem): FeatureVectors | null {
+    const routing = resolveItemRouting(item);
+    if (routing == null) { return null; }
 
-    let vectorData = getVectorData(baseType);
-    if (vectorData == null){ return null; }
-
+    const { category, itemType, vectorData } = routing;
     let vector = getEmptyVector(vectorData.modifiers, vectorData.properties, vectorData.stats);
     fillVectorWithItemData(vector, item, vectorData.properties);
 
@@ -35,23 +35,23 @@ export function transformItemIntoVector(item: ParsedItem) : FeatureVectors | nul
         }
     }
 
-    return transformDictionaryToDataVector(vector);
+    const { numericFeatures, categoricalFeatures } = transformDictionaryToDataVector(vector);
+    return { category, itemType, numericFeatures, categoricalFeatures };
 }
 
-export function getItemBaseType(item: ParsedItem): string | null {
-    let itemBase = item.category;
-    if (itemBase == null){
+function resolveItemRouting(item: ParsedItem): { category: "generic" | "unique"; itemType: string; vectorData: ItemTypeVectorData } | null {
+    if (item.rarity === ItemRarity.Unique && !item.isUnidentified) {
+        const uniqueName = item.info.refName;
+        if (uniqueName in itemVectorData.unique) {
+            return { category: "unique", itemType: uniqueName, vectorData: itemVectorData.unique[uniqueName] };
+        }
         return null;
     }
-    return itemBase.toString();
-}
 
-function getVectorData(baseType: string): ItemTypeVectorData | null {
-    if (!(baseType in itemVectorData.generic)){
-        return null;
-    }
-    let data = itemVectorData.generic[baseType]; 
-    return data;
+    const baseType = item.category?.toString();
+    if (baseType == null) { return null; }
+    if (!(baseType in itemVectorData.generic)) { return null; }
+    return { category: "generic", itemType: baseType, vectorData: itemVectorData.generic[baseType] };
 }
 
 function generateCombinations(arrays: string[][]): string[][] {
@@ -71,7 +71,7 @@ function generateCombinations(arrays: string[][]): string[][] {
     return result;
 }
 
-function transformDictionaryToDataVector(dict: {[key: string]: any}): FeatureVectors {
+function transformDictionaryToDataVector(dict: {[key: string]: any}): { numericFeatures: number[]; categoricalFeatures: string[] } {
     const numericFeatures: number[] = [];
     const categoricalFeatures: string[] = [];
 
@@ -270,7 +270,7 @@ const propertyMapByType: {[type: number]: (item: ParsedItem) => any} = {
     6:   (item: ParsedItem) => item.quality ?? 0, // Quality
     9:   (item: ParsedItem) => item.weaponPHYSICAL ?? 0, // Physical Damage
     10:  (item: ParsedItem) => item.weaponELEMENTAL ?? 0, // Elemental Damage
-    11:  (item: ParsedItem) => item.weaponChaos ?? 0, // Chaos Damage
+    11:  (item: ParsedItem) => item.weaponCHAOS ?? 0, // Chaos Damage
     12:  (item: ParsedItem) => item.weaponCRIT ?? 0, // Critical Hit Chance
     13:  (item: ParsedItem) => item.weaponAS ?? 0, // Attacks per Second
     15:  (item: ParsedItem) => item.armourBLOCK ?? 0, // Block Chance
@@ -282,7 +282,7 @@ const propertyMapByType: {[type: number]: (item: ParsedItem) => any} = {
     34:  (item: ParsedItem) => 0, // Area Level
     66:  (item: ParsedItem) => 0, // Waystone Drop Chance
 
-    97:  (item: ParsedItem) => item.weaponReload ?? 0, // Reload Time
+    97:  (item: ParsedItem) => item.weaponRELOAD ?? 0, // Reload Time
     98:  (item: ParsedItem) => 0, // Revives Available
     102: (item: ParsedItem) => 0, // Magic Monsters
     103: (item: ParsedItem) => 0, // Rare Monsters
