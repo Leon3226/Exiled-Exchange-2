@@ -9,7 +9,6 @@ export function getIcon(exaltedPrice: number): IconModel {
     let subjectiveScore = getSubjectiveEvaluatorScore(currencyPrice);
     let currencyIcon = `/images/currencies/${currencyPrice.currency}.png`
     let generalIcon = `/images/instantCheck/${subjectiveScore}.png`
-    // Get icon and sound
     return {
         price: currencyPrice,
         currencyIconUrl: currencyIcon,

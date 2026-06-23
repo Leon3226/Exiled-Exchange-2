@@ -3,6 +3,7 @@ import electron from 'electron'
 import esbuild from 'esbuild'
 
 const isDev = !process.argv.includes('--prod')
+const enableInspector = process.env.EE2_DEBUG === '1'
 
 const electronRunner = (() => {
   let handle = null
@@ -14,10 +15,9 @@ const electronRunner = (() => {
       handle = child_process.spawn(
         electron,
         [
-          '--inspect=9229',                 // Node inspector for Electron main
-          '--remote-debugging-port=9222',   // Chromium DevTools for renderer
-          '--enable-logging',               // (optional) extra logs from Electron/Chromium
-          '--enable-source-maps',           // Enable source maps in stack traces
+          ...(enableInspector ? ['--inspect=9229', '--remote-debugging-port=9222'] : []),
+          '--enable-logging',
+          '--enable-source-maps',
           '.'
         ],
         { stdio: 'inherit' }
@@ -40,8 +40,8 @@ const mainContext = await esbuild.context({
   platform: 'node',
   external: ['electron', 'uiohook-napi', 'electron-overlay-window', 'catboost'],
   outfile: 'dist/main.js',
-  sourcemap: true, 
-  sourcesContent: true,
+  sourcemap: isDev, 
+  sourcesContent: isDev,
   define: {
     'process.env.STATIC': (isDev) ? '"../build/icons"' : '"."',
     'process.env.VITE_DEV_SERVER_URL': (isDev) ? '"http://localhost:5173"' : 'null'

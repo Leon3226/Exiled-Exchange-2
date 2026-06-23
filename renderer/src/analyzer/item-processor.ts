@@ -12,10 +12,6 @@ export interface FeatureVectors {
     categoricalFeatures: string[];
 }
 
-// Must match the `skip_stats` flag the currently-loaded models were trained with
-// (training/pipeline.py / bulkTrainer.py). Models trained with skip_stats=True
-// (the default) never saw non-zero stat_*_value columns - flipping this on without
-// retraining those models would feed them out-of-distribution inputs.
 const STAT_VALUE_EXTRACTION_ENABLED = false;
 
 export function transformItemIntoVector(item: ParsedItem): FeatureVectors | null {
@@ -127,18 +123,9 @@ function getEmptyVector(possibleModifiers: string[], possibleProperties: number[
         vector[`mod_${possibleModifier}_fract`] = 0
         vector[`mod_${possibleModifier}_desecrated`] = 0
         vector[`mod_${possibleModifier}_tier`] = 0
-        // TODO: python's get_empty_vector has no mod_{modifier}_value field (only present/fract/
-        // desecrated/tier), so this extra always-zero column shifts every later column relative to
-        // the trained model. Commented out until the model is retrained with a matching column, then
-        // remove entirely.
         // vector[`mod_${possibleModifier}_value`] = 0
     });
 
-    // TODO: matches python's get_empty_vector, which appends one `stat_{stat}_value` column per
-    // entry in fields.stats. The training pipeline runs with skip_stats=True by default, so these
-    // are always 0 there too - left at 0 here. If training is ever run with --include-stats, this
-    // needs to compute real values the way vector_transformer.transform_item does (parsing mod
-    // text via parseMod and summing matching stat values).
     possibleStats.forEach(possibleStat => {
         vector[`stat_${possibleStat}_value`] = 0
     });
@@ -147,40 +134,40 @@ function getEmptyVector(possibleModifiers: string[], possibleProperties: number[
 }
 
 function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, possibleProperties: number[]) {
-    vector['baseType'] = item.baseType ?? item.info.refName;
-    vector['rarity'] = item.rarity?.toString();
-    vector['ilvl'] = item.itemLevel;
+    vector.baseType = item.baseType ?? item.info.refName;
+    vector.rarity = item.rarity?.toString();
+    vector.ilvl = item.itemLevel;
     
-    vector['corrupted'] = item.isCorrupted === true;
-    //Desecration calculated from mods
-    vector['mirrored'] = item.isMirrored === true;
-    vector['sanctified'] = item.isSanctified === true;
+    vector.corrupted = item.isCorrupted === true;
+    // Desecration calculated from mods
+    vector.mirrored = item.isMirrored === true;
+    vector.sanctified = item.isSanctified === true;
 
-    vector['level_requirement'] = item.requires?.level ?? 0;
-    vector['str_requirement'] = item.requires?.str ?? 0;
-    vector['dex_requirement'] = item.requires?.dex ?? 0;
-    vector['int_requirement'] = item.requires?.int ?? 0;
+    vector.level_requirement = item.requires?.level ?? 0;
+    vector.str_requirement = item.requires?.str ?? 0;
+    vector.dex_requirement = item.requires?.dex ?? 0;
+    vector.int_requirement = item.requires?.int ?? 0;
 
     const pdps = Math.round((item.weaponAS ?? 0) * (item.weaponPHYSICAL ?? 0));
     const edps = Math.round((item.weaponAS ?? 0) * (item.weaponELEMENTAL ?? 0));
     const dps = pdps + edps;
-    vector['pdps'] = pdps;
-    vector['edps'] = edps;
-    vector['dps'] = dps;
+    vector.pdps = pdps;
+    vector.edps = edps;
+    vector.dps = dps;
 
-    vector['ar'] = item.armourAR || 0;
-    vector['es'] = item.armourES || 0;
-    vector['ev'] = item.armourEV || 0;
+    vector.ar = item.armourAR || 0;
+    vector.es = item.armourES || 0;
+    vector.ev = item.armourEV || 0;
 
     let prefixes = 0;
     let suffixes = 0;
     let itemDesecrated = false;
     let itemFractured = false;
     item.newMods.forEach(mod => {
-        if(mod.info.type === "rune") { return; } //skip runes for now
-        let tier = mod.info.tier ?? 0;
-        let type = mod.info.type;
-        let generation = mod.info.generation;
+        if(mod.info.type === "rune") { return; } // skip runes for now
+        const tier = mod.info.tier ?? 0;
+        const type = mod.info.type;
+        const generation = mod.info.generation;
         let desecrated = false;
         let fractured = false;
 
@@ -230,18 +217,9 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
         }
 
         vector[`mod_${matchedStatString}_present`] = 1;
-        // TODO: python's transform_item never sets mod_*_fract/mod_*_desecrated to 1 - get_stat_strings
-        // already rewrites fractured/desecrated hashes to "explicit" before the fract/desecrated checks
-        // run, so those checks are dead code and the trained model only ever saw 0 here. Hardcoded to 0
-        // to match; restore the lines below once the python bug is fixed and the model is retrained.
-        // vector[`mod_${matchedStatString}_fract`] = fractured ? 1 : 0
-        // vector[`mod_${matchedStatString}_desecrated`] = desecrated ? 1 : 0
-        vector[`mod_${matchedStatString}_fract`] = 0
-        vector[`mod_${matchedStatString}_desecrated`] = 0
-        vector[`mod_${matchedStatString}_tier`] = tier
-        // TODO: python's get_empty_vector has no mod_{modifier}_value field - commented out until the
-        // model is retrained with a matching column, then remove entirely.
-        // vector[`mod_${matchedStatString}_value`] = 0;
+        vector[`mod_${matchedStatString}_fract`] = 0;
+        vector[`mod_${matchedStatString}_desecrated`] = 0;
+        vector[`mod_${matchedStatString}_tier`] = tier;
     });
 
     item.statsByType.forEach(stat => {
