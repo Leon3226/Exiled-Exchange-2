@@ -1,7 +1,7 @@
 import { currencyRates } from "./currency-data";
 import { CurrencyPrice } from "./currency-price";
 
-// Probably details should be controlled by the config as well. Not a priority right now.
+// TODO: Probably details should be controlled by the config as well. Not a priority right now.
 export function getSubjectiveEvaluatorScore(price: CurrencyPrice): number {
     if  (price.exaltedPrice < 7) { return 0; }
     if  (price.exaltedPrice < 15) { return 1; }
