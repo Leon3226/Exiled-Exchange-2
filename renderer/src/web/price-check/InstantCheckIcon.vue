@@ -27,9 +27,8 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const icon = props.icon;
     const detailedView = computed(() => props.detailed);
-    return { icon, detailedView };
+    return { detailedView };
   },
 });
 </script>

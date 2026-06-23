@@ -19,7 +19,7 @@ export function transformItemIntoVector(item: ParsedItem): FeatureVectors | null
     if (routing == null) { return null; }
 
     const { category, itemType, vectorData } = routing;
-    let vector = getEmptyVector(vectorData.modifiers, vectorData.properties, vectorData.stats);
+    const vector = getEmptyVector(vectorData.modifiers, vectorData.properties, vectorData.stats);
     fillVectorWithItemData(vector, item, vectorData.properties);
 
     if (STAT_VALUE_EXTRACTION_ENABLED) {
@@ -171,8 +171,8 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
         let desecrated = false;
         let fractured = false;
 
-        let stats = mod.stats.map(m => m.stat.trade.ids);
-        let statsToMerge: string[] = [];
+        const stats = mod.stats.map(m => m.stat.trade.ids);
+        const statsToMerge: string[] = [];
         stats.forEach(stat => {
             if(type === "fractured") {
                 itemFractured = true;
@@ -249,7 +249,7 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
     })
 
     possibleProperties.forEach(possibleProperty => {
-        let propString = `prop_${possibleProperty}`;
+        const propString = `prop_${possibleProperty}`;
         if (!(propString in vector)){
             console.log(`Unknown property in vector data: ${possibleProperty}!`);
             return;
@@ -261,15 +261,15 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
         vector[propString] = propertyMapByType[possibleProperty](item);
     });
 
-    vector['prefixes'] = prefixes;
-    vector['suffixes'] = suffixes;
-    vector['desecrated'] = itemDesecrated;
+    vector.prefixes = prefixes;
+    vector.suffixes = suffixes;
+    vector.desecrated = itemDesecrated;
 }
 
 const propertyMapByType: {[type: number]: (item: ParsedItem) => any} = {
-    1:   (item: ParsedItem) => 0, // Waystone Tier
-    3:   (item: ParsedItem) => 0, // Item Rarity
-    4:   (item: ParsedItem) => 0, // Pack Size
+    1:   () => 0, // Waystone Tier
+    3:   () => 0, // Item Rarity
+    4:   () => 2, // Pack Size
 
     6:   (item: ParsedItem) => item.quality ?? 0, // Quality
     9:   (item: ParsedItem) => item.weaponPHYSICAL ?? 0, // Physical Damage
@@ -281,14 +281,14 @@ const propertyMapByType: {[type: number]: (item: ParsedItem) => any} = {
     16:  (item: ParsedItem) => item.armourAR || 0, // Armour
     17:  (item: ParsedItem) => item.armourEV || 0, // Evasion
     18:  (item: ParsedItem) => item.armourES || 0, // Energy Shield
-    24:  (item: ParsedItem) => 0, // Jewel Radius
-    25:  (item: ParsedItem) => 0, // Spirit
-    34:  (item: ParsedItem) => 0, // Area Level
-    66:  (item: ParsedItem) => 0, // Waystone Drop Chance
+    24:  () => 0, // Jewel Radius
+    25:  () => 0, // Spirit
+    34:  () => 0, // Area Level
+    66:  () => 0, // Waystone Drop Chance
 
     97:  (item: ParsedItem) => item.weaponRELOAD ?? 0, // Reload Time
-    98:  (item: ParsedItem) => 0, // Revives Available
-    102: (item: ParsedItem) => 0, // Magic Monsters
-    103: (item: ParsedItem) => 0, // Rare Monsters
+    98:  () => 0, // Revives Available
+    102: () => 0, // Magic Monsters
+    103: () => 0, // Rare Monsters
 
 };

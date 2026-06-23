@@ -35,7 +35,7 @@ import {
   _configModelValue,
   findWidget,
 } from "./utils";
-import { PriceCheckWidget, DelveGridWidget, PriceCheckInstantWidget } from "@/web/overlay/interfaces";
+import { PriceCheckWidget, DelveGridWidget } from "@/web/overlay/interfaces";
 import { ItemCheckWidget } from "../item-check/widget.js";
 
 import UiRadio from "@/web/ui/UiRadio.vue";

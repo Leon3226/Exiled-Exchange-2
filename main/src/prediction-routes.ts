@@ -22,7 +22,7 @@ export interface PredictResponse {
 
 export interface PredictBatchResponse {
   success: boolean;
-  predictions?: (number | null)[];
+  predictions?: Array<number | null>;
   error?: string;
 }
 
@@ -39,7 +39,7 @@ export function addPredictionRoutes(
     if (req.method !== "POST" || req.url !== "/predict") return;
 
     let body = "";
-    req.on("data", (chunk) => {
+    req.on("data", (chunk: Buffer | string) => {
       body += chunk.toString();
     });
 
@@ -119,7 +119,7 @@ export function addPredictionRoutes(
     }
 
     const exists = catboostService.hasModel(
-      category as "generic" | "unique",
+      category ,
       decodeURIComponent(itemType),
     );
     res.end(JSON.stringify({ exists }));

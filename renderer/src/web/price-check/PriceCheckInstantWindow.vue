@@ -115,8 +115,6 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const leagueId = computed(() => AppConfig().leagueId);
-
     const wm = inject<WidgetManager>("wm")!;
     const {
       xchgRate,

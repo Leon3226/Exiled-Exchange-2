@@ -9,8 +9,8 @@ export function getPriceInCurrency(exaltedPrice:number): CurrencyPrice {
     }
     const lenientPrice = exaltedPrice * (1 + leniency);
     // It's possible to optimize this but I'm lazy.
-    for (let currencyName in currencyRates) {
-        let rate = currencyRates[currencyName];
+    for (const currencyName in currencyRates) {
+        const rate = currencyRates[currencyName];
         if (!validCurrencies.includes(currencyName) || lenientPrice < rate ) { continue; }
         const rawAmount = exaltedPrice / rate;
         const amount = Math.round(rawAmount);

@@ -5,10 +5,10 @@ import { getSubjectiveEvaluatorScore } from "./subjective-evaluator";
 
 
 export function getIcon(exaltedPrice: number): IconModel {
-    let currencyPrice = getPriceInCurrency(exaltedPrice);
-    let subjectiveScore = getSubjectiveEvaluatorScore(currencyPrice);
-    let currencyIcon = `/images/currencies/${currencyPrice.currency}.png`
-    let generalIcon = `/images/instantCheck/${subjectiveScore}.png`
+    const currencyPrice = getPriceInCurrency(exaltedPrice);
+    const subjectiveScore = getSubjectiveEvaluatorScore(currencyPrice);
+    const currencyIcon = `/images/currencies/${currencyPrice.currency}.png`
+    const generalIcon = `/images/instantCheck/${subjectiveScore}.png`
     return {
         price: currencyPrice,
         currencyIconUrl: currencyIcon,
