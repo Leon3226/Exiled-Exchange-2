@@ -66,6 +66,15 @@ export type UpdateInfo =
       checkedAt: number;
     };
 
+export type AssetChannelStatus =
+  | { state: "checking" }
+  | { state: "up-to-date"; version: string }
+  | { state: "downloading"; version: string }
+  | { state: "downloaded"; version: string }
+  | { state: "error"; message: string };
+
+export type AssetUpdaterState = Record<string, AssetChannelStatus>;
+
 export interface HostState {
   contents: string | null;
   version: string;
@@ -93,7 +102,8 @@ export type IpcEvent =
   | IpcConfigChanged
   | IpcUserAction
   | IpcWriteToFile
-  | IpcReparseLog;
+  | IpcReparseLog
+  | IpcAssetUpdaterState;
 
 export type IpcEventPayload<
   Name extends IpcEvent["name"],
@@ -203,6 +213,11 @@ type IpcReparseLog = Event<"CLIENT->MAIN::re-parse-log">;
 
 type IpcUpdaterState = Event<"MAIN->CLIENT::updater-state", UpdateInfo>;
 
+type IpcAssetUpdaterState = Event<
+  "MAIN->CLIENT::asset-updater-state",
+  AssetUpdaterState
+>;
+
 // Hotkeyable actions are defined in `ShortcutAction`.
 // Actions below are triggered by user interaction with the UI.
 type IpcUserAction = Event<
@@ -213,6 +228,9 @@ type IpcUserAction = Event<
   | {
       action: "stash-search";
       text: string;
+    }
+  | {
+      action: "check-for-data-update";
     }
 >;
 

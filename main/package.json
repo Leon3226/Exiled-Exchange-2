@@ -20,11 +20,13 @@
   },
   "main": "dist/main.js",
   "dependencies": {
+    "adm-zip": "^0.5.17",
     "catboost": "^1.26.0",
     "electron-overlay-window": "4.0.2",
     "uiohook-napi": "1.5.x"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/ini": "^4.1.0",
     "@types/node": "22.x.x",
     "@types/ws": "^8.5.3",
@@ -35,8 +37,8 @@
     "electron-devtools-installer": "^4.0.0",
     "electron-updater": "^6.8.3",
     "esbuild": "^0.28.0",
-    "ini": "^6.0.0",
     "eslint-config-prettier": "^9.1.0",
+    "ini": "^6.0.0",
     "prettier": "3.4.2",
     "typescript": "5.9.x",
     "ws": "^8.16.0"
