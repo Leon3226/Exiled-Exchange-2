@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - 'master'
+      - 'release'
     tags-ignore:
       - '**'
     paths-ignore:
