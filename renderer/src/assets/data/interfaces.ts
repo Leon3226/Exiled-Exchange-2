@@ -320,6 +320,6 @@ export interface ItemTypeVectorDataCollection {
 }
 
 export interface CatboostModelCollection {
-  generic: { [key: string]: any };
-  unique: { [key: string]: any };
+  generic: { [key: string]: unknown };
+  unique: { [key: string]: unknown };
 }

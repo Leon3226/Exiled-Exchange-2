@@ -1,7 +1,6 @@
 import fnv1a from "@sindresorhus/fnv1a";
 import type {
   BaseType,
-  CatboostModelCollection,
   DropEntry,
   AugmentDataByAugment,
   AugmentDataByTradeId,

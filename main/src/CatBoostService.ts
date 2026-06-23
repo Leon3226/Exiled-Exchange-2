@@ -12,6 +12,7 @@ export class CatBoostService {
     generic: new Map(),
     unique: new Map(),
   };
+
   private modelsBasePath: string;
   private initialized: boolean = false;
 
@@ -85,7 +86,7 @@ export class CatBoostService {
 
     try {
       const predictions = model.predict([featureVector], [categoricalFeatures]);
-      return predictions[0] as number;
+      return predictions[0] ;
     } catch (error) {
       console.error(
         `[CatBoost] Prediction failed forcc ${category}/${itemType}:`,
@@ -110,7 +111,7 @@ export class CatBoostService {
     return fs.existsSync(modelPath);
   }
 
-  preloadModels(models: { category: "generic" | "unique"; itemType: string }[]): void {
+  preloadModels(models: Array<{ category: "generic" | "unique"; itemType: string }>): void {
     for (const { category, itemType } of models) {
       this.loadModel(category, itemType);
     }

@@ -5,7 +5,6 @@ import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
-import { fileURLToPath } from "url";
 import { IpcEvent, IpcEventPayload, HostState } from "../../ipc/types";
 import { ConfigStore } from "./host-files/ConfigStore";
 import { addFileUploadRoutes } from "./host-files/file-uploads";
