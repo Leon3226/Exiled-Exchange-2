@@ -58,14 +58,8 @@ import {
   WidgetSpec,
 } from "../overlay/interfaces";
 import ItemEditor from "./filters/ItemEditor.vue";
-import {
-  BaseType,
-  loadUltraLateItems,
-} from "@/assets/data";
-import { translatedEffectsPseudos } from "./filters/pseudo";
 import { ItemEditorType } from "@/parser/meta";
 import { getItemEditorType } from "./filters/util";
-import { transformItemIntoVector } from "@/analyzer/item-processor";
 import { getPrice } from "@/analyzer/analyzer";
 import { getIcon } from "@/analyzer/display/icon-data-generator";
 import { IconModel } from "@/analyzer/display/icon-model";
@@ -195,7 +189,7 @@ export default defineComponent({
     const itemPrices = new Map<string, number>();
     const cacheEnabled = false;  
 
-    async function getItemPriceFromText(itemText: string, eventItem: any): Promise<{price: number, itemHash: string}> {
+    async function getItemPriceFromText(itemText: string, eventItem: unknown): Promise<{price: number, itemHash: string}> {
       const itemHash: string = await getItemHashValue(itemText);
       if (cacheEnabled && itemPrices.has(itemHash)) {
         return { itemHash, price: itemPrices.get(itemHash) ?? 0 };
@@ -203,20 +197,11 @@ export default defineComponent({
       item.value = handleItemPaste({ clipboard: itemText, item: eventItem });
       if (item.value.isOk()) {
         const realPrice = await getPrice(item.value.value);
-        // const estimatedPrice = realPrice ?? getFakePrice();
         const estimatedPrice = realPrice ?? 0;
         itemPrices.set(itemHash, estimatedPrice);
         return { itemHash, price: estimatedPrice };
       }
       return {itemHash: "", price: 0};
-    }
-
-    function getFakePrice(): number {
-      return Math.min(...Array.from({ length: 150 }, () => getRandomInt(10000)));
-    }
-
-    function getRandomInt(max: number): number {
-      return Math.floor(Math.random() * max);
     }
 
     async function getItemHashValue(s: string): Promise<string> {
@@ -225,7 +210,7 @@ export default defineComponent({
       return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
     }
 
-    function handleItemPaste(e: { clipboard: string; item: any }) {
+    function handleItemPaste(e: { clipboard: string; item: unknown }) {
       const newItem = (
         e.item ? ok(e.item as ParsedItem) : parseClipboard(e.clipboard)
       )

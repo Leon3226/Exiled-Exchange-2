@@ -26,7 +26,7 @@ export function transformItemIntoVector(item: ParsedItem): FeatureVectors | null
         const statValues = extractStatValues(item.newMods, vectorData.stats);
         for (const [key, value] of Object.entries(statValues)) {
             if (key in vector) {
-                vector[key] += value;
+                vector[key] = (vector[key] as number) + value;
             }
         }
     }
@@ -67,7 +67,7 @@ function generateCombinations(arrays: string[][]): string[][] {
     return result;
 }
 
-function transformDictionaryToDataVector(dict: {[key: string]: any}): { numericFeatures: number[]; categoricalFeatures: string[] } {
+function transformDictionaryToDataVector(dict: {[key: string]: unknown}): { numericFeatures: number[]; categoricalFeatures: string[] } {
     const numericFeatures: number[] = [];
     const categoricalFeatures: string[] = [];
 
@@ -86,8 +86,8 @@ function transformDictionaryToDataVector(dict: {[key: string]: any}): { numericF
     return { numericFeatures, categoricalFeatures };
 }
 
-function getEmptyVector(possibleModifiers: string[], possibleProperties: number[], possibleStats: string[]): {[key: string]: any} {
-    const vector = [] as {[key: string]: any};
+function getEmptyVector(possibleModifiers: string[], possibleProperties: number[], possibleStats: string[]): {[key: string]: unknown} {
+    const vector = {} as {[key: string]: unknown};
     vector.baseType = ''
     vector.rarity = ''
     vector.ilvl = 0
@@ -133,7 +133,7 @@ function getEmptyVector(possibleModifiers: string[], possibleProperties: number[
     return vector
 }
 
-function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, possibleProperties: number[]) {
+function fillVectorWithItemData(vector: {[key: string]: unknown}, item: ParsedItem, possibleProperties: number[]) {
     vector.baseType = item.baseType ?? item.info.refName;
     vector.rarity = item.rarity?.toString();
     vector.ilvl = item.itemLevel;
@@ -162,26 +162,26 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
     let prefixes = 0;
     let suffixes = 0;
     let itemDesecrated = false;
-    let itemFractured = false;
+    // let itemFractured = false; // TODO: wire into a vector.fractured field once one exists
     item.newMods.forEach(mod => {
         if(mod.info.type === "rune") { return; } // skip runes for now
         const tier = mod.info.tier ?? 0;
         const type = mod.info.type;
         const generation = mod.info.generation;
-        let desecrated = false;
-        let fractured = false;
+        // let desecrated = false;
+        // let fractured = false;
 
         const stats = mod.stats.map(m => m.stat.trade.ids);
         const statsToMerge: string[] = [];
         stats.forEach(stat => {
             if(type === "fractured") {
-                itemFractured = true;
-                fractured = true;
+                // itemFractured = true;
+                // fractured = true;
                 statsToMerge.push(stat.explicit.toString());
             }
             if(type === "desecrated") {
                 itemDesecrated = true;
-                desecrated = true;
+                // desecrated = true;
                 statsToMerge.push(stat.explicit.toString());
             }
             if(type === "explicit") {statsToMerge.push(stat.explicit.toString());}
@@ -217,8 +217,8 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
         }
 
         vector[`mod_${matchedStatString}_present`] = 1;
-        vector[`mod_${matchedStatString}_fract`] = 0;
-        vector[`mod_${matchedStatString}_desecrated`] = 0;
+        vector[`mod_${matchedStatString}_fract`] = 0; // not wired to per-mod `fractured` yet, see TODO above
+        vector[`mod_${matchedStatString}_desecrated`] = 0; // not wired to per-mod `desecrated` yet, see TODO above
         vector[`mod_${matchedStatString}_tier`] = tier;
     });
 
@@ -266,7 +266,7 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
     vector.desecrated = itemDesecrated;
 }
 
-const propertyMapByType: {[type: number]: (item: ParsedItem) => any} = {
+const propertyMapByType: {[type: number]: (item: ParsedItem) => unknown} = {
     1:   () => 0, // Waystone Tier
     3:   () => 0, // Item Rarity
     4:   () => 2, // Pack Size
