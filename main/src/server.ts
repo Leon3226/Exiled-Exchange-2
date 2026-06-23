@@ -10,6 +10,7 @@ import { ConfigStore } from "./host-files/ConfigStore";
 import { addFileUploadRoutes } from "./host-files/file-uploads";
 import { addPredictionRoutes } from "./prediction-routes";
 import { CatBoostService } from "./CatBoostService";
+import { AssetUpdater } from "./AssetUpdater";
 import type { AppUpdater } from "./AppUpdater";
 import type { Logger } from "./RemoteLogger";
 
@@ -18,46 +19,6 @@ const websocketServer = new WebSocketServer({ noServer: true });
 let lastActiveClient: WebSocket;
 
 addFileUploadRoutes(server);
-
-const catboostModelsPath = process.env.VITE_DEV_SERVER_URL
-  ? path.join(__dirname, "..", "..", "renderer", "public", "data", "gradientBoostModel")
-  : path.join(__dirname, "data", "gradientBoostModel");
-const catboostService = new CatBoostService(catboostModelsPath);
-catboostService.initialize().catch((err) => {
-  console.error("[CatBoost] Failed to initialize:", err);
-});
-addPredictionRoutes(server, catboostService);
-
-if (!process.env.VITE_DEV_SERVER_URL) {
-  server.addListener("request", (req, res) => {
-    if (
-      req.url?.startsWith("/config") ||
-      req.url?.startsWith("/uploads") ||
-      req.url?.startsWith("/proxy") ||
-      req.url?.startsWith("/predict") ||
-      req.url?.startsWith("/models")
-    )
-      return;
-
-    const filePath = req.url === "/" ? "/index.html" : req.url!;
-    switch (path.extname(filePath)) {
-      case ".html":
-        res.setHeader("content-type", "text/html");
-        break;
-      case ".js":
-        res.setHeader("content-type", "text/javascript");
-        break;
-      case ".json":
-        res.setHeader("content-type", "application/json");
-        break;
-      case ".svg":
-        res.setHeader("content-type", "image/svg+xml");
-        break;
-    }
-
-    fs.createReadStream(path.join(__dirname, filePath)).pipe(res);
-  });
-}
 
 const evBus = new EventEmitter();
 
@@ -90,6 +51,70 @@ export const eventPipe = {
   onEventAnyClient,
   sendEventTo,
 };
+
+export const assetUpdater = new AssetUpdater(eventPipe);
+assetUpdater.checkAtStartup();
+
+function resolveModelBundlePath(): string | null {
+  return assetUpdater.getActivePath("model_bundle");
+}
+
+function resolveModelsPath(): string {
+  const downloaded = resolveModelBundlePath();
+  if (downloaded) return downloaded;
+
+  return process.env.VITE_DEV_SERVER_URL
+    ? path.join(__dirname, "..", "..", "renderer", "public", "data", "gradientBoostModel")
+    : path.join(__dirname, "data", "gradientBoostModel");
+}
+
+const catboostService = new CatBoostService(resolveModelsPath());
+catboostService.initialize().catch((err) => {
+  console.error("[CatBoost] Failed to initialize:", err);
+});
+addPredictionRoutes(server, catboostService);
+
+server.addListener("request", (req, res) => {
+  if (req.url !== "/data/item-vector-data.json") return;
+
+  const bundleDir = resolveModelBundlePath();
+  const downloaded = bundleDir ? path.join(bundleDir, "item-vector-data.json") : null;
+  if (!downloaded || !fs.existsSync(downloaded)) return; // fall through to the generic static handler below
+
+  res.setHeader("content-type", "application/json");
+  fs.createReadStream(downloaded).pipe(res);
+});
+
+if (!process.env.VITE_DEV_SERVER_URL) {
+  server.addListener("request", (req, res) => {
+    if (
+      req.url?.startsWith("/config") ||
+      req.url?.startsWith("/uploads") ||
+      req.url?.startsWith("/proxy") ||
+      req.url?.startsWith("/predict") ||
+      req.url?.startsWith("/models")
+    )
+      return;
+
+    const filePath = req.url === "/" ? "/index.html" : req.url!;
+    switch (path.extname(filePath)) {
+      case ".html":
+        res.setHeader("content-type", "text/html");
+        break;
+      case ".js":
+        res.setHeader("content-type", "text/javascript");
+        break;
+      case ".json":
+        res.setHeader("content-type", "application/json");
+        break;
+      case ".svg":
+        res.setHeader("content-type", "image/svg+xml");
+        break;
+    }
+
+    fs.createReadStream(path.join(__dirname, filePath)).pipe(res);
+  });
+}
 
 server.on("upgrade", (req, socket, head) => {
   if (req.url !== "/events") {
