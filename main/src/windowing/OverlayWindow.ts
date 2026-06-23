@@ -78,7 +78,9 @@ export class OverlayWindow {
 
     if (process.env.VITE_DEV_SERVER_URL) {
       this.window.loadURL(url);
-      this.window.webContents.openDevTools({ mode: "detach", activate: false });
+      if (process.env.EE2_DEBUG !== "1") {
+        this.window.webContents.openDevTools({ mode: "detach", activate: false });
+      }
     } else {
       this.window.loadURL(url);
     }

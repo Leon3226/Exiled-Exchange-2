@@ -87,32 +87,32 @@ function transformDictionaryToDataVector(dict: {[key: string]: any}): { numericF
 }
 
 function getEmptyVector(possibleModifiers: string[], possibleProperties: number[], possibleStats: string[]): {[key: string]: any} {
-    let vector = [] as {[key: string]: any};
-    vector['baseType'] = ''
-    vector['rarity'] = ''
-    vector['ilvl'] = 0
+    const vector = [] as {[key: string]: any};
+    vector.baseType = ''
+    vector.rarity = ''
+    vector.ilvl = 0
 
-    vector['corrupted'] = false
-    vector['desecrated'] = false
-    vector['mirrored'] = false
-    vector['sanctified'] = false
+    vector.corrupted = false
+    vector.desecrated = false
+    vector.mirrored = false
+    vector.sanctified = false
 
-    vector['level_requirement'] = 0
-    vector['dex_requirement'] = 0
-    vector['str_requirement'] = 0
-    vector['int_requirement'] = 0
+    vector.level_requirement = 0
+    vector.dex_requirement = 0
+    vector.str_requirement = 0
+    vector.int_requirement = 0
 
-    vector['prefixes'] = 0
-    vector['suffixes'] = 0
-    vector['sockets'] = 0
+    vector.prefixes = 0
+    vector.suffixes = 0
+    vector.sockets = 0
 
-    vector['pdps'] = 0
-    vector['edps'] = 0
-    vector['dps'] = 0
+    vector.pdps = 0
+    vector.edps = 0
+    vector.dps = 0
 
-    vector['ar'] = 0
-    vector['es'] = 0
-    vector['ev'] = 0
+    vector.ar = 0
+    vector.es = 0
+    vector.ev = 0
 
     possibleProperties.forEach(possibleProperty => {
         vector[`prop_${possibleProperty}`] = 0
