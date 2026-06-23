@@ -19,5 +19,5 @@ export async function getPrice(item: ParsedItem): Promise<number | null> {
         return null;
     }
 
-    return Math.expm1(prediction);
+    return Math.round(Math.expm1(prediction));
 }

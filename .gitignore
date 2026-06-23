@@ -31,3 +31,5 @@ docs/.vitepress/cache
 
 # Temportary files
 gradientBoostModel
+
+package-lock.json

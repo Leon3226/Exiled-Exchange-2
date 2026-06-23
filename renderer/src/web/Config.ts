@@ -673,7 +673,7 @@ function upgradeConfig(_config: Config): Config {
   }
   /* eslint-enable */
 
-  if (config.configVersion < 33) {
+  if (config.configVersion < 35) {
 
     config.widgets.push({
       ...defaultConfig().widgets.find((w) => w.wmType === "price-check-instant")!,
@@ -681,7 +681,7 @@ function upgradeConfig(_config: Config): Config {
       wmZorder: null,
     });
 
-    config.configVersion = 33;
+    config.configVersion = 35;
   }
 
   return config as unknown as Config;

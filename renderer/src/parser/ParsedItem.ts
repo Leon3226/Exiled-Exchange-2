@@ -112,6 +112,7 @@ export interface ParsedItem {
     numberOfTrials?: number;
     ultimatumHint?: "Victorious" | "Cowardly" | "Deadly";
   };
+  baseType?: string;
   info: BaseType;
   rawText: string;
 }

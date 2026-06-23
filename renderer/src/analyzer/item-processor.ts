@@ -147,10 +147,10 @@ function getEmptyVector(possibleModifiers: string[], possibleProperties: number[
 }
 
 function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, possibleProperties: number[]) {
-    vector['baseType'] = item.info.refName;
+    vector['baseType'] = item.baseType ?? item.info.refName;
     vector['rarity'] = item.rarity?.toString();
     vector['ilvl'] = item.itemLevel;
-
+    
     vector['corrupted'] = item.isCorrupted === true;
     //Desecration calculated from mods
     vector['mirrored'] = item.isMirrored === true;
@@ -243,6 +243,32 @@ function fillVectorWithItemData(vector: {[key: string]: any}, item: ParsedItem, 
         // model is retrained with a matching column, then remove entirely.
         // vector[`mod_${matchedStatString}_value`] = 0;
     });
+
+    item.statsByType.forEach(stat => {
+        let possibleStats: string[] | undefined;
+        switch (stat.type) {
+            case "explicit":
+            case "crafted":
+            case "fractured":
+            case "desecrated":
+                possibleStats = stat.stat.trade.ids.explicit;
+                break;
+            case "implicit":
+                possibleStats = stat.stat.trade.ids.implicit;
+                break;
+            case "rune":
+                possibleStats = stat.stat.trade.ids.rune;
+                break;
+            default:
+                return;
+        }
+        if (!possibleStats) return;
+        const matchedStat = possibleStats.find(s => `stat_${s}_value` in vector);
+        if (matchedStat !== undefined){
+            const sum = stat.sources.reduce((acc, source) => acc + (source.contributes?.value ?? 0), 0);
+            vector[`stat_${matchedStat}_value`] = sum === 0 && stat.sources.every(s => s.contributes == null) ? 1 : sum;
+        }
+    })
 
     possibleProperties.forEach(possibleProperty => {
         let propString = `prop_${possibleProperty}`;
