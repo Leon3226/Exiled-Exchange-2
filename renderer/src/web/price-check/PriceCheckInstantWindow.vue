@@ -82,8 +82,8 @@ export default defineComponent({
         wmWants: "hide",
         wmZorder: "exclusive",
         wmFlags: ["hide-on-blur", "menu::skip"],
-        hotkeyInstant: "Ctrl + R",
-        hotkeyInstantLocked: "Ctrl + Alt + R",
+        hotkeyInstant: "Ctrl + Alt + R",
+        soundVolume: 45,
       };
     },
   } satisfies WidgetSpec,
@@ -167,7 +167,7 @@ export default defineComponent({
           setToDeleteIcon(lastPricingId, 4000);
           if (!icon.unknown) {
             const sound = new Audio(`/sounds/${icon.subjectiveScore}.wav`); // TODO: Questionable in terms of performance. Review if causes trouble.
-            sound.volume = 0.45;  // TODO: Add to settings 
+            sound.volume = props.config.soundVolume / 100;
             sound.currentTime = 0;
             sound.play()
           }

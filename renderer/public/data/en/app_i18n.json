@@ -400,6 +400,7 @@
     "name": "Price check",
     "hotkey": "Auto-hide Mode",
     "hotkey_locked": "Open without auto-hide",
+    "hotkey_instant": "Instant check",
     "enable_browser": "Enable builtin browser",
     "use_pseudo": "Use pseudo mods (disable if you have issues with auth)",
     "builtin_browser_warning": "I am aware that future releases can potentially contain malicious code that can steal my POESESSID.",
@@ -436,7 +437,9 @@
     "core_currency": "Primary base currency:",
     "show_volume": "Show Currency Exchange volume per hour:",
     "warn_advanced": "Advanced settings, don't change unless you are experiencing issues",
-    "initial_delay": "Initial clipboard check delay(after copy-item keybind is pressed)"
+    "initial_delay": "Initial clipboard check delay(after copy-item keybind is pressed)",
+    "instant_check": "Instant check",
+    "instant_volume": "Sound volume"
   },
   "poe2_new": {
     "beta_warning": "This is in BETA for POE2, things will not work always as expected.",

@@ -35,7 +35,11 @@ import {
   _configModelValue,
   findWidget,
 } from "./utils";
-import { PriceCheckWidget, DelveGridWidget } from "@/web/overlay/interfaces";
+import {
+  PriceCheckWidget,
+  PriceCheckInstantWidget,
+  DelveGridWidget,
+} from "@/web/overlay/interfaces";
 import { ItemCheckWidget } from "../item-check/widget.js";
 
 import UiRadio from "@/web/ui/UiRadio.vue";
@@ -46,6 +50,10 @@ const props = defineProps(configProp());
 const hotkeys = computed<HotkeySchema[]>(() => {
   const priceCheckWidget = findWidget<PriceCheckWidget>(
     "price-check",
+    props.config,
+  )!;
+  const priceCheckInstantWidget = findWidget<PriceCheckInstantWidget>(
+    "price-check-instant",
     props.config,
   )!;
   const itemCheckWidget = findWidget<ItemCheckWidget>(
@@ -70,6 +78,10 @@ const hotkeys = computed<HotkeySchema[]>(() => {
         {
           translationKey: "price_check.hotkey_locked",
           config: _configModelValue(priceCheckWidget, "hotkeyLocked"),
+        },
+        {
+          translationKey: "price_check.hotkey_instant",
+          config: _configModelValue(priceCheckInstantWidget, "hotkeyInstant"),
         },
       ],
     },

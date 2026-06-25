@@ -352,7 +352,6 @@ function upgradeConfig(_config: Config): Config {
     priceCheck.hotkeyHold = (config as any).priceCheckKeyHold;
     priceCheck.hotkeyLocked = (config as any).priceCheckLocked;
     priceCheck.hotkeyInstant = (config as any).priceCheckInstant;
-    priceCheck.hotkeyInstantLocked = (config as any).priceCheckInstantLocked;
     priceCheck.showSeller = (config as any).showSeller;
     priceCheck.searchStatRange = (config as any).searchStatRange;
     priceCheck.showCursor = (config as any).priceCheckShowCursor;
@@ -709,13 +708,6 @@ function getConfigForHost(): HostConfig {
   if (priceCheckInstant && priceCheckInstant.hotkeyInstant) {
     actions.push({
       shortcut: priceCheckInstant.hotkeyInstant,
-      action: { type: "copy-item", target: "price-check-instant", focusOverlay: false },
-      keepModKeys: true,
-    });
-  }
-  if (priceCheckInstant && priceCheckInstant.hotkeyInstantLocked) {
-    actions.push({
-      shortcut: priceCheckInstant.hotkeyInstantLocked,
       action: { type: "copy-item", target: "price-check-instant", focusOverlay: false },
       keepModKeys: true,
     });

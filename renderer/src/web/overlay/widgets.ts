@@ -64,7 +64,7 @@ export interface PriceCheckWidget extends Widget {
 
 export interface PriceCheckInstantWidget extends Widget {
   hotkeyInstant: string | null;
-  hotkeyInstantLocked: string | null;
+  soundVolume: number;
 }
 
 export interface StopwatchWidget extends Widget {

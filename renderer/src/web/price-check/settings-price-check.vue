@@ -250,6 +250,22 @@
         </div>
       </div>
     </div>
+
+    <div class="border-2 rounded border-gray-700 mb-2">
+      <div class="bg-gray-700 p-2 mb-2">{{ t(":instant_check") }}</div>
+      <div class="mb-2 mx-2">
+        <div class="flex-1 mb-1">{{ t(":instant_volume") }}</div>
+        <div class="flex">
+          <div class="flex mr-6">
+            <input
+              v-model.number="instantSoundVolume"
+              class="rounded bg-gray-900 px-1 block w-16 mb-1 font-poe text-center"
+            />
+            <span class="ml-2">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -323,8 +339,6 @@ export default defineComponent({
           : null,
       ),
       hotkeyLocked: computed(() => configWidget.value.hotkeyLocked),
-      hotkeyInstant: computed(() => configWidgetInstant.value.hotkeyInstant),
-      hotkeyInstantLocked: computed(() => configWidgetInstant.value.hotkeyInstantLocked),
       smartInitialSearch: configModelValue(
         () => configWidget.value,
         "smartInitialSearch",
@@ -401,6 +415,19 @@ export default defineComponent({
           if (typeof value !== "number") return;
 
           configWidget.value.initialDelay = Math.min(Math.max(value, 5), 400);
+        },
+      }),
+      instantSoundVolume: computed<number>({
+        get() {
+          return configWidgetInstant.value.soundVolume;
+        },
+        set(value) {
+          if (typeof value !== "number") return;
+
+          configWidgetInstant.value.soundVolume = Math.min(
+            Math.max(value, 0),
+            100,
+          );
         },
       }),
       getAugmentNameByRef,
