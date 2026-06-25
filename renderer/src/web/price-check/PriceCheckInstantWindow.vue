@@ -3,7 +3,6 @@
     style="top: 0; left: 0; height: 100%; width: 100%; position: absolute; background-color: rgba(0, 50, 0, 0)"
     class="flex grow h-full pointer-events-none"
   >
-    <div style="font-size: 50px;">{{ pricing.lastPrice }}</div>
     <div
       v-for="([id, icon]) in iconEntries"
       :key="id"
@@ -83,8 +82,8 @@ export default defineComponent({
         wmWants: "hide",
         wmZorder: "exclusive",
         wmFlags: ["hide-on-blur", "menu::skip"],
-        hotkeyInstant: "Ctrl + Alt + S",
-        hotkeyInstantLocked: "Ctrl + Alt + A",
+        hotkeyInstant: "Ctrl + R",
+        hotkeyInstantLocked: "Ctrl + Alt + R",
       };
     },
   } satisfies WidgetSpec,
@@ -162,14 +161,16 @@ export default defineComponent({
           }
         }
         else{
-          pricing.lastPrice = p.price; 
+          pricing.lastPrice = p.price;
           const icon = getIcon(p.price);
           itemPricingIcons.set(lastPricingId, reactive({ x: scrX, y: scrY, iconData: icon, forceDetailed: false, animateDelay: 500 }));
           setToDeleteIcon(lastPricingId, 4000);
-          const sound = new Audio(`/sounds/${icon.subjectiveScore}.wav`); // Questionable in terms of performance. Review if causes trouble.
-          sound.volume = 0.45;
-          sound.currentTime = 0;
-          sound.play()
+          if (!icon.unknown) {
+            const sound = new Audio(`/sounds/${icon.subjectiveScore}.wav`); // TODO: Questionable in terms of performance. Review if causes trouble.
+            sound.volume = 0.45;  // TODO: Add to settings 
+            sound.currentTime = 0;
+            sound.play()
+          }
           lastPricingId++;
         }
       });
@@ -183,25 +184,24 @@ export default defineComponent({
     }
 
     let lastPricingId = 0;
-    const pricing = reactive({ lastPrice: 0 });
+    const pricing = reactive<{ lastPrice: number | null }>({ lastPrice: null });
     const itemPricingIcons = reactive(new Map<number, {x: number, y: number, iconData: IconModel, forceDetailed: boolean, animateDelay: number}>());
     const iconEntries = computed(() => Array.from(itemPricingIcons.entries()));
-    const itemPrices = new Map<string, number>();
-    const cacheEnabled = false;  
+    const itemPrices = new Map<string, number | null>();
+    const cacheEnabled = false;
 
-    async function getItemPriceFromText(itemText: string, eventItem: unknown): Promise<{price: number, itemHash: string}> {
+    async function getItemPriceFromText(itemText: string, eventItem: unknown): Promise<{price: number | null, itemHash: string}> {
       const itemHash: string = await getItemHashValue(itemText);
       if (cacheEnabled && itemPrices.has(itemHash)) {
-        return { itemHash, price: itemPrices.get(itemHash) ?? 0 };
-      } 
+        return { itemHash, price: itemPrices.get(itemHash) ?? null };
+      }
       item.value = handleItemPaste({ clipboard: itemText, item: eventItem });
       if (item.value.isOk()) {
-        const realPrice = await getPrice(item.value.value);
-        const estimatedPrice = realPrice ?? 0;
+        const estimatedPrice = await getPrice(item.value.value);
         itemPrices.set(itemHash, estimatedPrice);
         return { itemHash, price: estimatedPrice };
       }
-      return {itemHash: "", price: 0};
+      return {itemHash: "", price: null};
     }
 
     async function getItemHashValue(s: string): Promise<string> {

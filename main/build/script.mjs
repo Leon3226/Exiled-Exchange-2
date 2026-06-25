@@ -15,10 +15,10 @@ const electronRunner = (() => {
       handle = childProcess.spawn(
         electron,
         [
+          '.',
           ...(enableInspector ? ['--inspect=9229', '--remote-debugging-port=9222'] : []),
           '--enable-logging',
-          '--enable-source-maps',
-          '.'
+          '--enable-source-maps'
         ],
         { stdio: 'inherit' }
       )

@@ -1,13 +1,18 @@
 <template>
   <div class="instant-icon">
-    <div v-if="detailedView">
-      <span class="amount">{{ icon.price.amount }}x </span>
-      <img :src="icon?.currencyIconUrl" class="icon-img" />
-      <span class="uncertainty">{{ Array.from({ length: icon.price.uncertainty }, () => "?").join("") }}</span>
+    <div v-if="icon.unknown">
+      <span class="amount">???</span>
     </div>
-    <div v-if="!detailedView">
-      <img :src="icon?.generalIconUrl" class="general-img"/>
-    </div>
+    <template v-else>
+      <div v-if="detailedView">
+        <span class="amount">{{ icon.price!.amount }}x </span>
+        <img :src="icon?.currencyIconUrl" class="icon-img" />
+        <span class="uncertainty">{{ Array.from({ length: icon.price!.uncertainty }, () => "?").join("") }}</span>
+      </div>
+      <div v-if="!detailedView">
+        <img :src="icon?.generalIconUrl" class="general-img"/>
+      </div>
+    </template>
   </div>
 </template>
 

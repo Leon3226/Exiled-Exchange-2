@@ -4,7 +4,17 @@ import { getSubjectiveEvaluatorScore } from "./subjective-evaluator";
 
 
 
-export function getIcon(exaltedPrice: number): IconModel {
+export function getIcon(exaltedPrice: number | null): IconModel {
+    if (exaltedPrice === null) {
+        return {
+            price: null,
+            currencyIconUrl: "",
+            generalIconUrl: "",
+            sound: "",
+            subjectiveScore: -1,
+            unknown: true,
+        };
+    }
     const currencyPrice = getPriceInCurrency(exaltedPrice);
     const subjectiveScore = getSubjectiveEvaluatorScore(currencyPrice);
     const currencyIcon = `/images/currencies/${currencyPrice.currency}.png`
@@ -14,6 +24,7 @@ export function getIcon(exaltedPrice: number): IconModel {
         currencyIconUrl: currencyIcon,
         generalIconUrl: generalIcon,
         sound: "",
-        subjectiveScore
+        subjectiveScore,
+        unknown: false,
     };
 }

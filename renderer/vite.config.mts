@@ -35,6 +35,7 @@ export default defineConfig({
   server: {
     proxy: {
       "^/(config|uploads|proxy|predict|models)": { target: "http://127.0.0.1:8584" },
+      "/data/item-vector-data.json": { target: "http://127.0.0.1:8584" },
       "/events": { ws: true, target: "http://127.0.0.1:8584" },
     },
   },
